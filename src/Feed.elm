@@ -1,19 +1,26 @@
+import Static exposing (reminders, emails)
+import Item exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Date exposing ( Date )
 
-
-type todo: List Item
-
-type done: List Item
-
 -- MODEL
 
-type alias Model = { todo }
+type alias Model =
+  { focus: Int
+  , todo: List ( ID, Item )
+  , done: List ( ID, Item )
+  , todoID: ID
+  , doneID: ID
+  }
+
+type alias ID: Int
 
 -- UPDATE
 
-type Action = Pin | Previous | Next | Add | Truncate | Done | Sort
+type Action = Previous | Next | Add | AlterSort
+
+update : Action -> Model -> Model
 
 -- VIEW
 
