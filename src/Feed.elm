@@ -9,7 +9,7 @@ type done: List Item
 
 -- MODEL
 
-type alias Model = { ... }
+type alias Model = { todo }
 
 -- UPDATE
 
