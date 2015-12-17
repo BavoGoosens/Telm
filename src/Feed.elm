@@ -21,7 +21,7 @@ type alias ID: Int
 type Action
     = Previous
     | Next
-    | Add
+    | Add Bool Bool String List (String, String)
     | Remove ID
     | Modify ID Item.Action
     | AlterSort
@@ -29,8 +29,16 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case action of
-    Add -> model
-    Remove id -> model
+    Add done pinned body params ->
+      { model |
+        todo = (model.todoID, Item.init done pinned body params) :: model.todo,
+        todoID = model.todoID + 1
+      }
+    Remove id ->
+      { model |
+        todo = List.filter (\(itemID, _) -> itemID /= id) model.todo,
+        done = List.filter (\(itemID, _) -> ietmID /= id) model.done
+      }
     Next -> if model.focus < model.len then
               {model | focus = model.focus + 1}
             else
