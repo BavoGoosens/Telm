@@ -6,12 +6,15 @@ Elm.Main.make = function (_elm) {
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
+   $Item = Elm.Item.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
    var _op = {};
-   var main = $Signal.constant($Html.text("This should work."));
+   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,"test",{body: "Take out the trash",created: "2016-09-30"})
+                                     ,update: $Item.update
+                                     ,view: $Item.view});
    return _elm.Main.values = {_op: _op,main: main};
 };

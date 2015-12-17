@@ -1,5 +1,10 @@
-import Feed exposing (update, view)
-import StartApp.Simple exposing (start)
+import Item exposing (..)
+import StartApp.Simple exposing ( start )
+-- import Static exposing (Reminder, Email)
 
 main =
-  start { model = 0, update = update, view = view }
+  start
+  { model = init False False "test" { body = "Take out the trash", created = "2016-09-30" }
+  , update = update
+  , view = view
+  }

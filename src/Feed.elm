@@ -2,7 +2,6 @@ import Static exposing (reminders, emails)
 import Item exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import Date exposing ( Date )
 
 -- MODEL
 

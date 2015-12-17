@@ -1,0 +1,56 @@
+Elm.Item = Elm.Item || {};
+Elm.Item.make = function (_elm) {
+   "use strict";
+   _elm.Item = _elm.Item || {};
+   if (_elm.Item.values) return _elm.Item.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Static = Elm.Static.make(_elm);
+   var _op = {};
+   var bodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
+                                                  ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                  ,{ctor: "_Tuple2",_0: "display",_1: "inline-block"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "400px"}
+                                                  ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}]));
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      switch (_p0.ctor)
+      {case "Pin": return _U.update(model,{pinned: $Basics.not(model.pinned)});
+         case "Done": return _U.update(model,{done: $Basics.not(model.done)});
+         default: return _U.update(model,{displayedText: "model.item.body"});}
+   });
+   var Done = {ctor: "Done"};
+   var Truncate = {ctor: "Truncate"};
+   var Pin = {ctor: "Pin"};
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([]),
+      _U.list([A2($Html.div,_U.list([bodyStyle]),_U.list([$Html.text($Basics.toString(model.displayedText))]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Pin)]),_U.list([$Html.text("Pin")]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Done)]),_U.list([$Html.text("Mark Done")]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Truncate)]),_U.list([$Html.text("more")]))]));
+   });
+   var Email = {ctor: "Email"};
+   var Reminder = {ctor: "Reminder"};
+   var Model = F4(function (a,b,c,d) {    return {done: a,pinned: b,displayedText: c,item: d};});
+   var init = F4(function (a,b,c,d) {    return A4(Model,a,b,c,d);});
+   return _elm.Item.values = {_op: _op
+                             ,Model: Model
+                             ,Reminder: Reminder
+                             ,Email: Email
+                             ,init: init
+                             ,Pin: Pin
+                             ,Truncate: Truncate
+                             ,Done: Done
+                             ,update: update
+                             ,view: view
+                             ,bodyStyle: bodyStyle};
+};
