@@ -7,6 +7,7 @@ import Html.Attributes exposing (style)
 
 type alias Model =
   { focus: Int
+  , len: Int
   , todo: List ( ID, Item )
   , done: List ( ID, Item )
   , todoID: ID
@@ -17,9 +18,23 @@ type alias ID: Int
 
 -- UPDATE
 
-type Action = Previous | Next | Add | AlterSort
+type Action
+    = Previous
+    | Next
+    | Add
+    | Remove ID
+    | Modify ID Counter.Action
+    | AlterSort
 
 update : Action -> Model -> Model
+update action model =
+  case action of
+    Add -> model
+    Remove id -> model
+    Next -> model
+    Previous -> model
+    Modify id counterAction -> model
+    AlterSort -> model
 
 -- VIEW
 

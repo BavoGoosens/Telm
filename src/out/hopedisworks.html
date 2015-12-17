@@ -10285,9 +10285,12 @@ Elm.Item.make = function (_elm) {
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.div,_U.list([bodyStyle]),_U.list([$Html.text($Basics.toString(model.displayedText))]))
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Pin)]),_U.list([$Html.text("Pin")]))
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Done)]),_U.list([$Html.text("Mark Done")]))
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Truncate)]),_U.list([$Html.text("more")]))]));
+              ,A2($Html.br,_U.list([]),_U.list([]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Pin)]),_U.list([model.pinned ? $Html.text("Unpin") : $Html.text("Pin")]))
+              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Done)]),_U.list([model.done ? $Html.text("Undo") : $Html.text("Mark Done")]))
+              ,A2($Html.button,
+              _U.list([A2($Html$Events.onClick,address,Truncate)]),
+              _U.list([_U.cmp($String.length(model.displayedText),200) > 0 ? $Html.text("less") : $Html.text("more")]))]));
    });
    var Model = F6(function (a,b,c,d,e,f) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,params: f};});
    var init = F4(function (done,pinned,body,params) {
