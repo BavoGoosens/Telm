@@ -31,7 +31,7 @@ update action model =
     Pin -> {model | pinned = not model.pinned}
     Done -> {model | done = not model.done}
     Truncate ->   if (model.truncable && (String.length model.displayedText) <= 200) then
-                      {model | displayedText = model.body}
+                    {model | displayedText = model.body}
                   else
                     if (model.truncable && (String.length model.displayedText) > 200) then
                         {model | displayedText = (String.left 200 model.body)}
@@ -43,12 +43,15 @@ update action model =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div []
-    [ div [ bodyStyle ] [ text (toString model.displayedText) ],
-    br [] []
+    [ div [ bodyStyle ] [ text (toString model.displayedText) ]
+    , br [] []
     , button [ onClick address Pin ] [ if model.pinned then text "Unpin" else text "Pin" ]
     , button [ onClick address Done ] [ if model.done then text "Undo" else text "Mark Done" ]
     , button [ onClick address Truncate ] [ if (String.length model.displayedText) > 200 then text "less" else text "more" ]
     ]
+
+tupleToString : (String, String) -> String
+tupleToString (jos , jef) = jos ++ " " ++ jef
 
 bodyStyle : Attribute
 bodyStyle =

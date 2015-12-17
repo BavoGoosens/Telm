@@ -10269,9 +10269,10 @@ Elm.Item.make = function (_elm) {
                                                   ,{ctor: "_Tuple2",_0: "display",_1: "inline-block"}
                                                   ,{ctor: "_Tuple2",_0: "width",_1: "400px"}
                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}]));
+   var tupleToString = function (_p0) {    var _p1 = _p0;return A2($Basics._op["++"],_p1._0,A2($Basics._op["++"]," ",_p1._1));};
    var update = F2(function (action,model) {
-      var _p0 = action;
-      switch (_p0.ctor)
+      var _p2 = action;
+      switch (_p2.ctor)
       {case "Pin": return _U.update(model,{pinned: $Basics.not(model.pinned)});
          case "Done": return _U.update(model,{done: $Basics.not(model.done)});
          default: return model.truncable && _U.cmp($String.length(model.displayedText),200) < 1 ? _U.update(model,
@@ -10296,7 +10297,16 @@ Elm.Item.make = function (_elm) {
    var init = F4(function (done,pinned,body,params) {
       return A6(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,params);
    });
-   return _elm.Item.values = {_op: _op,Model: Model,init: init,Pin: Pin,Truncate: Truncate,Done: Done,update: update,view: view,bodyStyle: bodyStyle};
+   return _elm.Item.values = {_op: _op
+                             ,Model: Model
+                             ,init: init
+                             ,Pin: Pin
+                             ,Truncate: Truncate
+                             ,Done: Done
+                             ,update: update
+                             ,view: view
+                             ,tupleToString: tupleToString
+                             ,bodyStyle: bodyStyle};
 };Elm.StartApp = Elm.StartApp || {};
 Elm.StartApp.Simple = Elm.StartApp.Simple || {};
 Elm.StartApp.Simple.make = function (_elm) {
