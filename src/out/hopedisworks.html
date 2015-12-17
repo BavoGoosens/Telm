@@ -10247,295 +10247,6 @@ Elm.Html.Events.make = function (_elm) {
                                     ,targetChecked: targetChecked
                                     ,keyCode: keyCode
                                     ,Options: Options};
-};Elm.Native.Date = {};
-Elm.Native.Date.make = function(localRuntime) {
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Date = localRuntime.Native.Date || {};
-	if (localRuntime.Native.Date.values)
-	{
-		return localRuntime.Native.Date.values;
-	}
-
-	var Result = Elm.Result.make(localRuntime);
-
-	function readDate(str)
-	{
-		var date = new Date(str);
-		return isNaN(date.getTime())
-			? Result.Err('unable to parse \'' + str + '\' as a date')
-			: Result.Ok(date);
-	}
-
-	var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-	var monthTable =
-		['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-		 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-
-	return localRuntime.Native.Date.values = {
-		read: readDate,
-		year: function(d) { return d.getFullYear(); },
-		month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
-		day: function(d) { return d.getDate(); },
-		hour: function(d) { return d.getHours(); },
-		minute: function(d) { return d.getMinutes(); },
-		second: function(d) { return d.getSeconds(); },
-		millisecond: function(d) { return d.getMilliseconds(); },
-		toTime: function(d) { return d.getTime(); },
-		fromTime: function(t) { return new Date(t); },
-		dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
-	};
-};
-Elm.Native.Time = {};
-
-Elm.Native.Time.make = function(localRuntime)
-{
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Time = localRuntime.Native.Time || {};
-	if (localRuntime.Native.Time.values)
-	{
-		return localRuntime.Native.Time.values;
-	}
-
-	var NS = Elm.Native.Signal.make(localRuntime);
-	var Maybe = Elm.Maybe.make(localRuntime);
-
-
-	// FRAMES PER SECOND
-
-	function fpsWhen(desiredFPS, isOn)
-	{
-		var msPerFrame = 1000 / desiredFPS;
-		var ticker = NS.input('fps-' + desiredFPS, null);
-
-		function notifyTicker()
-		{
-			localRuntime.notify(ticker.id, null);
-		}
-
-		function firstArg(x, y)
-		{
-			return x;
-		}
-
-		// input fires either when isOn changes, or when ticker fires.
-		// Its value is a tuple with the current timestamp, and the state of isOn
-		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
-
-		var initialState = {
-			isOn: false,
-			time: localRuntime.timer.programStart,
-			delta: 0
-		};
-
-		var timeoutId;
-
-		function update(input, state)
-		{
-			var currentTime = input._0;
-			var isOn = input._1;
-			var wasOn = state.isOn;
-			var previousTime = state.time;
-
-			if (isOn)
-			{
-				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
-			}
-			else if (wasOn)
-			{
-				clearTimeout(timeoutId);
-			}
-
-			return {
-				isOn: isOn,
-				time: currentTime,
-				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
-			};
-		}
-
-		return A2(
-			NS.map,
-			function(state) { return state.delta; },
-			A3(NS.foldp, F2(update), update(input.value, initialState), input)
-		);
-	}
-
-
-	// EVERY
-
-	function every(t)
-	{
-		var ticker = NS.input('every-' + t, null);
-		function tellTime()
-		{
-			localRuntime.notify(ticker.id, null);
-		}
-		var clock = A2(NS.map, fst, NS.timestamp(ticker));
-		setInterval(tellTime, t);
-		return clock;
-	}
-
-
-	function fst(pair)
-	{
-		return pair._0;
-	}
-
-
-	function read(s)
-	{
-		var t = Date.parse(s);
-		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
-	}
-
-	return localRuntime.Native.Time.values = {
-		fpsWhen: F2(fpsWhen),
-		every: every,
-		toDate: function(t) { return new Date(t); },
-		read: read
-	};
-};
-Elm.Time = Elm.Time || {};
-Elm.Time.make = function (_elm) {
-   "use strict";
-   _elm.Time = _elm.Time || {};
-   if (_elm.Time.values) return _elm.Time.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Native$Signal = Elm.Native.Signal.make(_elm),
-   $Native$Time = Elm.Native.Time.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var delay = $Native$Signal.delay;
-   var since = F2(function (time,signal) {
-      var stop = A2($Signal.map,$Basics.always(-1),A2(delay,time,signal));
-      var start = A2($Signal.map,$Basics.always(1),signal);
-      var delaydiff = A3($Signal.foldp,F2(function (x,y) {    return x + y;}),0,A2($Signal.merge,start,stop));
-      return A2($Signal.map,F2(function (x,y) {    return !_U.eq(x,y);})(0),delaydiff);
-   });
-   var timestamp = $Native$Signal.timestamp;
-   var every = $Native$Time.every;
-   var fpsWhen = $Native$Time.fpsWhen;
-   var fps = function (targetFrames) {    return A2(fpsWhen,targetFrames,$Signal.constant(true));};
-   var inMilliseconds = function (t) {    return t;};
-   var millisecond = 1;
-   var second = 1000 * millisecond;
-   var minute = 60 * second;
-   var hour = 60 * minute;
-   var inHours = function (t) {    return t / hour;};
-   var inMinutes = function (t) {    return t / minute;};
-   var inSeconds = function (t) {    return t / second;};
-   return _elm.Time.values = {_op: _op
-                             ,millisecond: millisecond
-                             ,second: second
-                             ,minute: minute
-                             ,hour: hour
-                             ,inMilliseconds: inMilliseconds
-                             ,inSeconds: inSeconds
-                             ,inMinutes: inMinutes
-                             ,inHours: inHours
-                             ,fps: fps
-                             ,fpsWhen: fpsWhen
-                             ,every: every
-                             ,timestamp: timestamp
-                             ,delay: delay
-                             ,since: since};
-};Elm.Date = Elm.Date || {};
-Elm.Date.make = function (_elm) {
-   "use strict";
-   _elm.Date = _elm.Date || {};
-   if (_elm.Date.values) return _elm.Date.values;
-   var _U = Elm.Native.Utils.make(_elm),$Native$Date = Elm.Native.Date.make(_elm),$Result = Elm.Result.make(_elm),$Time = Elm.Time.make(_elm);
-   var _op = {};
-   var millisecond = $Native$Date.millisecond;
-   var second = $Native$Date.second;
-   var minute = $Native$Date.minute;
-   var hour = $Native$Date.hour;
-   var dayOfWeek = $Native$Date.dayOfWeek;
-   var day = $Native$Date.day;
-   var month = $Native$Date.month;
-   var year = $Native$Date.year;
-   var fromTime = $Native$Date.fromTime;
-   var toTime = $Native$Date.toTime;
-   var fromString = $Native$Date.read;
-   var Dec = {ctor: "Dec"};
-   var Nov = {ctor: "Nov"};
-   var Oct = {ctor: "Oct"};
-   var Sep = {ctor: "Sep"};
-   var Aug = {ctor: "Aug"};
-   var Jul = {ctor: "Jul"};
-   var Jun = {ctor: "Jun"};
-   var May = {ctor: "May"};
-   var Apr = {ctor: "Apr"};
-   var Mar = {ctor: "Mar"};
-   var Feb = {ctor: "Feb"};
-   var Jan = {ctor: "Jan"};
-   var Sun = {ctor: "Sun"};
-   var Sat = {ctor: "Sat"};
-   var Fri = {ctor: "Fri"};
-   var Thu = {ctor: "Thu"};
-   var Wed = {ctor: "Wed"};
-   var Tue = {ctor: "Tue"};
-   var Mon = {ctor: "Mon"};
-   var Date = {ctor: "Date"};
-   return _elm.Date.values = {_op: _op
-                             ,fromString: fromString
-                             ,toTime: toTime
-                             ,fromTime: fromTime
-                             ,year: year
-                             ,month: month
-                             ,day: day
-                             ,dayOfWeek: dayOfWeek
-                             ,hour: hour
-                             ,minute: minute
-                             ,second: second
-                             ,millisecond: millisecond
-                             ,Jan: Jan
-                             ,Feb: Feb
-                             ,Mar: Mar
-                             ,Apr: Apr
-                             ,May: May
-                             ,Jun: Jun
-                             ,Jul: Jul
-                             ,Aug: Aug
-                             ,Sep: Sep
-                             ,Oct: Oct
-                             ,Nov: Nov
-                             ,Dec: Dec
-                             ,Mon: Mon
-                             ,Tue: Tue
-                             ,Wed: Wed
-                             ,Thu: Thu
-                             ,Fri: Fri
-                             ,Sat: Sat
-                             ,Sun: Sun};
-};Elm.Static = Elm.Static || {};
-Elm.Static.make = function (_elm) {
-   "use strict";
-   _elm.Static = _elm.Static || {};
-   if (_elm.Static.values) return _elm.Static.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var emails = _U.list([{from: "bossman@corporate.me"
-                         ,to: "manager@corporate.me"
-                         ,title: "Corporate Ipsum"
-                         ,body: "Collaboratively administrate empowered markets via plug-and-play\n                networks. Dynamically procrastinate B2C users after installed base\n                benefits. Dramatically visualize customer directed convergence without\n                revolutionary ROI.\n\n                Efficiently unleash cross-media information without cross-media\n                value. Quickly maximize timely deliverables for real-time\n                schemas. Dramatically maintain clicks-and-mortar solutions\n                without functional solutions.\n\n                Completely synergize resource taxing relationships via premier\n                niche markets. Professionally cultivate one-to-one customer\n                service with robust ideas. Dynamically innovate\n                resource-leveling customer service for state of the art customer\n                service."
-                         ,date: "2015-01-30"}
-                        ,{from: "hello@test.me"
-                         ,to: "goodbye@test.me"
-                         ,title: "Shorter than 200"
-                         ,body: "This is the body of an email with less than 200 characters."
-                         ,date: "2015-09-30"}]);
-   var reminders = _U.list([{body: "Take out the trash",created: "2016-09-30"},{body: "Groceries",created: "2015-09-25"}]);
-   var Reminder = F2(function (a,b) {    return {body: a,created: b};});
-   var Email = F5(function (a,b,c,d,e) {    return {from: a,to: b,title: c,body: d,date: e};});
-   return _elm.Static.values = {_op: _op,Email: Email,Reminder: Reminder,reminders: reminders,emails: emails};
 };Elm.Item = Elm.Item || {};
 Elm.Item.make = function (_elm) {
    "use strict";
@@ -10551,7 +10262,7 @@ Elm.Item.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Static = Elm.Static.make(_elm);
+   $String = Elm.String.make(_elm);
    var _op = {};
    var bodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
                                                   ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
@@ -10563,7 +10274,9 @@ Elm.Item.make = function (_elm) {
       switch (_p0.ctor)
       {case "Pin": return _U.update(model,{pinned: $Basics.not(model.pinned)});
          case "Done": return _U.update(model,{done: $Basics.not(model.done)});
-         default: return _U.update(model,{displayedText: "model.item.body"});}
+         default: return model.truncable && _U.cmp($String.length(model.displayedText),200) < 1 ? _U.update(model,
+           {displayedText: model.body}) : model.truncable && _U.cmp($String.length(model.displayedText),200) > 0 ? _U.update(model,
+           {displayedText: A2($String.left,200,model.body)}) : model;}
    });
    var Done = {ctor: "Done"};
    var Truncate = {ctor: "Truncate"};
@@ -10576,21 +10289,11 @@ Elm.Item.make = function (_elm) {
               ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Done)]),_U.list([$Html.text("Mark Done")]))
               ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Truncate)]),_U.list([$Html.text("more")]))]));
    });
-   var Email = {ctor: "Email"};
-   var Reminder = {ctor: "Reminder"};
-   var Model = F4(function (a,b,c,d) {    return {done: a,pinned: b,displayedText: c,item: d};});
-   var init = F4(function (a,b,c,d) {    return A4(Model,a,b,c,d);});
-   return _elm.Item.values = {_op: _op
-                             ,Model: Model
-                             ,Reminder: Reminder
-                             ,Email: Email
-                             ,init: init
-                             ,Pin: Pin
-                             ,Truncate: Truncate
-                             ,Done: Done
-                             ,update: update
-                             ,view: view
-                             ,bodyStyle: bodyStyle};
+   var Model = F6(function (a,b,c,d,e,f) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,params: f};});
+   var init = F4(function (done,pinned,body,params) {
+      return A6(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,params);
+   });
+   return _elm.Item.values = {_op: _op,Model: Model,init: init,Pin: Pin,Truncate: Truncate,Done: Done,update: update,view: view,bodyStyle: bodyStyle};
 };Elm.StartApp = Elm.StartApp || {};
 Elm.StartApp.Simple = Elm.StartApp.Simple || {};
 Elm.StartApp.Simple.make = function (_elm) {
@@ -10638,8 +10341,35 @@ Elm.Main.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
    var _op = {};
-   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,"test",{body: "Take out the trash",created: "2016-09-30"})
-                                     ,update: $Item.update
-                                     ,view: $Item.view});
-   return _elm.Main.values = {_op: _op,main: main};
+   var get_other_email_attributes = function (_p0) {
+      var _p1 = _p0;
+      return _U.list([{ctor: "_Tuple2",_0: "to",_1: _p1.to}
+                     ,{ctor: "_Tuple2",_0: "from",_1: _p1.from}
+                     ,{ctor: "_Tuple2",_0: "title",_1: _p1.title}
+                     ,{ctor: "_Tuple2",_0: "body",_1: _p1.body}
+                     ,{ctor: "_Tuple2",_0: "date",_1: _p1.date}]);
+   };
+   var get_other_reminder_attributes = function (_p2) {
+      var _p3 = _p2;
+      return _U.list([{ctor: "_Tuple2",_0: "body",_1: _p3.body},{ctor: "_Tuple2",_0: "created",_1: _p3.created}]);
+   };
+   var test3 = {from: "bossman@corporate.me"
+               ,to: "manager@corporate.me"
+               ,title: "Corporate Ipsum"
+               ,body: "Collaboratively administrate empowered markets via plug-and-play\n              networks. Dynamically procrastinate B2C users after installed base\n              benefits. Dramatically visualize customer directed convergence without\n              revolutionary ROI.\n\n              Efficiently unleash cross-media information without cross-media\n              value. Quickly maximize timely deliverables for real-time\n              schemas. Dramatically maintain clicks-and-mortar solutions\n              without functional solutions.\n\n              Completely synergize resource taxing relationships via premier\n              niche markets. Professionally cultivate one-to-one customer\n              service with robust ideas. Dynamically innovate\n              resource-leveling customer service for state of the art customer\n              service."
+               ,date: "2015-01-30"};
+   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test3.body,get_other_email_attributes(test3)),update: $Item.update,view: $Item.view});
+   var test2 = {from: "hello@test.me"
+               ,to: "goodbye@test.me"
+               ,title: "Shorter than 200"
+               ,body: "This is the body of an email with less than 200 characters."
+               ,date: "2015-09-30"};
+   var test1 = {body: "Take out the trash",created: "2016-09-30"};
+   return _elm.Main.values = {_op: _op
+                             ,test1: test1
+                             ,test2: test2
+                             ,test3: test3
+                             ,main: main
+                             ,get_other_reminder_attributes: get_other_reminder_attributes
+                             ,get_other_email_attributes: get_other_email_attributes};
 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>

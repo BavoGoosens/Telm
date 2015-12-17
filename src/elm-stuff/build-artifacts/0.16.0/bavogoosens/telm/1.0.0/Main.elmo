@@ -13,8 +13,35 @@ Elm.Main.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
    var _op = {};
-   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,"test",{body: "Take out the trash",created: "2016-09-30"})
-                                     ,update: $Item.update
-                                     ,view: $Item.view});
-   return _elm.Main.values = {_op: _op,main: main};
+   var get_other_email_attributes = function (_p0) {
+      var _p1 = _p0;
+      return _U.list([{ctor: "_Tuple2",_0: "to",_1: _p1.to}
+                     ,{ctor: "_Tuple2",_0: "from",_1: _p1.from}
+                     ,{ctor: "_Tuple2",_0: "title",_1: _p1.title}
+                     ,{ctor: "_Tuple2",_0: "body",_1: _p1.body}
+                     ,{ctor: "_Tuple2",_0: "date",_1: _p1.date}]);
+   };
+   var get_other_reminder_attributes = function (_p2) {
+      var _p3 = _p2;
+      return _U.list([{ctor: "_Tuple2",_0: "body",_1: _p3.body},{ctor: "_Tuple2",_0: "created",_1: _p3.created}]);
+   };
+   var test3 = {from: "bossman@corporate.me"
+               ,to: "manager@corporate.me"
+               ,title: "Corporate Ipsum"
+               ,body: "Collaboratively administrate empowered markets via plug-and-play\n              networks. Dynamically procrastinate B2C users after installed base\n              benefits. Dramatically visualize customer directed convergence without\n              revolutionary ROI.\n\n              Efficiently unleash cross-media information without cross-media\n              value. Quickly maximize timely deliverables for real-time\n              schemas. Dramatically maintain clicks-and-mortar solutions\n              without functional solutions.\n\n              Completely synergize resource taxing relationships via premier\n              niche markets. Professionally cultivate one-to-one customer\n              service with robust ideas. Dynamically innovate\n              resource-leveling customer service for state of the art customer\n              service."
+               ,date: "2015-01-30"};
+   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test3.body,get_other_email_attributes(test3)),update: $Item.update,view: $Item.view});
+   var test2 = {from: "hello@test.me"
+               ,to: "goodbye@test.me"
+               ,title: "Shorter than 200"
+               ,body: "This is the body of an email with less than 200 characters."
+               ,date: "2015-09-30"};
+   var test1 = {body: "Take out the trash",created: "2016-09-30"};
+   return _elm.Main.values = {_op: _op
+                             ,test1: test1
+                             ,test2: test2
+                             ,test3: test3
+                             ,main: main
+                             ,get_other_reminder_attributes: get_other_reminder_attributes
+                             ,get_other_email_attributes: get_other_email_attributes};
 };

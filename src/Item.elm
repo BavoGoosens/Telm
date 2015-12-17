@@ -30,7 +30,7 @@ update action model =
   case action of
     Pin -> {model | pinned = not model.pinned}
     Done -> {model | done = not model.done}
-    Truncate -> {model | displayedText = "model.item.body" }
+    Truncate ->  if (model.truncable && (String.length model.displayedText) <= 200) then {model | displayedText = model.body} else if (model.truncable && (String.length model.displayedText) > 200) then {model | displayedText = (String.left 200 model.body)} else model
 
 -- VIEW
 
