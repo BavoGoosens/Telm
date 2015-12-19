@@ -2,6 +2,7 @@ module Feed where
 
 import Static exposing (reminders, emails, get_other_reminder_attributes, get_other_email_attributes)
 import Item exposing (..)
+import Date exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -37,6 +38,37 @@ bulk_init_email record =
       Item.init False False record.body (get_other_email_attributes record)
 
 
+customComparison: (ID, Item.Model) -> (ID, Item.Model) -> Order
+customComparison (a, b) (c, d) =
+  if b.pinned && not d.pinned then
+    LT
+  else
+    if not b.pinned && d.pinned then
+      GT
+    else
+      dateComparison b.order d.order
+
+dateComparison: Date -> Date -> Order
+dateComparison a b =
+  if Date.year a == Date.year b then
+    if monthToInt(Date.month a) == monthToInt(Date.month b) then
+      if Date.day a == Date.day b then
+        EQ
+      else
+        if Date.day a > Date.day b then
+          GT
+        else
+          LT
+    else
+      if monthToInt(Date.month a) > monthToInt(Date.month b) then
+        GT
+      else
+        LT
+  else
+    if Date.year a > Date.year b then
+      GT
+    else
+      LT
 -- UPDATE
 
 type Action
@@ -96,9 +128,9 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
     h1 [headerStyle] [text "Todo "]
-    , div [] (List.map (viewItem address) model.todo)
+    , div [] (List.map (viewItem address) (List.sortWith customComparison model.todo))
     , h1 [headerStyle] [text "Done "]
-    , div [] (List.map (viewItem address) model.done)
+    , div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
     ]
 
 viewItem : Signal.Address Action -> (ID, Item.Model) -> Html
@@ -118,3 +150,20 @@ headerStyle =
     , ("margin-left", "auto")
     , ("margin-right", "auto")
     ]
+
+-- Helper
+monthToInt: Month -> Int
+monthToInt month =
+  case month of
+    Jan -> 1
+    Feb -> 2
+    Mar -> 3
+    Apr -> 4
+    May -> 5
+    Jun -> 6
+    Jul -> 7
+    Aug -> 8
+    Sep -> 9
+    Oct -> 10
+    Nov -> 11
+    Dec -> 12

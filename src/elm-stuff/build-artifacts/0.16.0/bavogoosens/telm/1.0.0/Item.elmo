@@ -5,6 +5,7 @@ Elm.Item.make = function (_elm) {
    if (_elm.Item.values) return _elm.Item.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
@@ -128,13 +129,20 @@ Elm.Item.make = function (_elm) {
                       _U.list([A2($Html$Events.onClick,address,Done)]),
                       _U.list([model.done ? $Html.text("Undo") : $Html.text("Mark Done")]))]))]));
    });
-   var Model = F6(function (a,b,c,d,e,f) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,params: f};});
+   var extractDate = function (list) {
+      var isDateField = function (_p5) {    var _p6 = _p5;var _p7 = _p6._0;return _U.eq(_p7,"created") || _U.eq(_p7,"date") ? _p6._1 : "";};
+      return A2($Result.withDefault,
+      $Date.fromTime(0),
+      $Date.fromString(A2($Maybe.withDefault,"",$List.head(A2($List.filter,function (a) {    return !_U.eq(a,"");},A2($List.map,isDateField,list))))));
+   };
+   var Model = F7(function (a,b,c,d,e,f,g) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,order: f,params: g};});
    var init = F4(function (done,pinned,body,params) {
-      return A6(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,params);
+      return A7(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,extractDate(params),params);
    });
    return _elm.Item.values = {_op: _op
                              ,Model: Model
                              ,init: init
+                             ,extractDate: extractDate
                              ,Pin: Pin
                              ,Truncate: Truncate
                              ,Done: Done

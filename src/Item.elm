@@ -3,6 +3,7 @@ module Item where
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Date exposing (..)
 import String
 
 
@@ -14,12 +15,23 @@ type alias Model =
    , truncable: Bool
    , displayedText: String
    , body: String
+   , order: Date
    , params: List (String, String)
    }
 
 -- check if truncable
 init: Bool -> Bool -> String -> List (String, String)-> Model
-init done pinned body params = Model done pinned ((String.length body) > 200) (String.left 200 body) body params
+init done pinned body params = Model done pinned ((String.length body) > 200) (String.left 200 body) body (extractDate params) params
+
+extractDate: List (String, String) -> Date
+extractDate list =
+  let isDateField (key, value) =
+    if key == "created" ||  key == "date" then
+      value
+    else
+      ""
+  in
+    Result.withDefault (Date.fromTime 0) (Date.fromString (Maybe.withDefault "" (List.head (List.filter (\a -> a /= "") (List.map isDateField list)))))
 
 -- UPDATE
 

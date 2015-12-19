@@ -10561,6 +10561,7 @@ Elm.Item.make = function (_elm) {
    if (_elm.Item.values) return _elm.Item.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
@@ -10684,13 +10685,20 @@ Elm.Item.make = function (_elm) {
                       _U.list([A2($Html$Events.onClick,address,Done)]),
                       _U.list([model.done ? $Html.text("Undo") : $Html.text("Mark Done")]))]))]));
    });
-   var Model = F6(function (a,b,c,d,e,f) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,params: f};});
+   var extractDate = function (list) {
+      var isDateField = function (_p5) {    var _p6 = _p5;var _p7 = _p6._0;return _U.eq(_p7,"created") || _U.eq(_p7,"date") ? _p6._1 : "";};
+      return A2($Result.withDefault,
+      $Date.fromTime(0),
+      $Date.fromString(A2($Maybe.withDefault,"",$List.head(A2($List.filter,function (a) {    return !_U.eq(a,"");},A2($List.map,isDateField,list))))));
+   };
+   var Model = F7(function (a,b,c,d,e,f,g) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,order: f,params: g};});
    var init = F4(function (done,pinned,body,params) {
-      return A6(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,params);
+      return A7(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,extractDate(params),params);
    });
    return _elm.Item.values = {_op: _op
                              ,Model: Model
                              ,init: init
+                             ,extractDate: extractDate
                              ,Pin: Pin
                              ,Truncate: Truncate
                              ,Done: Done
@@ -10710,6 +10718,7 @@ Elm.Feed.make = function (_elm) {
    if (_elm.Feed.values) return _elm.Feed.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
@@ -10720,6 +10729,22 @@ Elm.Feed.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Static = Elm.Static.make(_elm);
    var _op = {};
+   var monthToInt = function (month) {
+      var _p0 = month;
+      switch (_p0.ctor)
+      {case "Jan": return 1;
+         case "Feb": return 2;
+         case "Mar": return 3;
+         case "Apr": return 4;
+         case "May": return 5;
+         case "Jun": return 6;
+         case "Jul": return 7;
+         case "Aug": return 8;
+         case "Sep": return 9;
+         case "Oct": return 10;
+         case "Nov": return 11;
+         default: return 12;}
+   };
    var headerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "40px"}
                                                     ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
                                                     ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
@@ -10728,29 +10753,29 @@ Elm.Feed.make = function (_elm) {
                                                     ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                     ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
    var update = F2(function (action,model) {
-      var _p0 = action;
-      switch (_p0.ctor)
+      var _p1 = action;
+      switch (_p1.ctor)
       {case "Add": return _U.update(model,
-           {todo: A2($List._op["::"],{ctor: "_Tuple2",_0: model.todoID,_1: A4($Item.init,_p0._0,_p0._1,_p0._2,_p0._3)},model.todo),todoID: model.todoID + 1});
-         case "Remove": var _p5 = _p0._0;
+           {todo: A2($List._op["::"],{ctor: "_Tuple2",_0: model.todoID,_1: A4($Item.init,_p1._0,_p1._1,_p1._2,_p1._3)},model.todo),todoID: model.todoID + 1});
+         case "Remove": var _p6 = _p1._0;
            return _U.update(model,
-           {todo: A2($List.filter,function (_p1) {    var _p2 = _p1;return !_U.eq(_p2._0,_p5);},model.todo)
-           ,done: A2($List.filter,function (_p3) {    var _p4 = _p3;return !_U.eq(_p4._0,_p5);},model.done)});
+           {todo: A2($List.filter,function (_p2) {    var _p3 = _p2;return !_U.eq(_p3._0,_p6);},model.todo)
+           ,done: A2($List.filter,function (_p4) {    var _p5 = _p4;return !_U.eq(_p5._0,_p6);},model.done)});
          case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
          case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
-         case "Modify": var _p16 = _p0._2;
-           var _p15 = _p0._1;
-           var _p14 = _p0._0;
-           if (_U.eq(_p16,$Item.Done)) return _p15.done ? _U.update(model,
-              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p14,_1: A2($Item.update,_p16,_p15)}]))
-              ,done: A2($List.filter,function (_p6) {    var _p7 = _p6;return !_U.eq(_p7._0,_p14);},model.done)}) : _U.update(model,
-              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p14,_1: A2($Item.update,_p16,_p15)}]))
-              ,todo: A2($List.filter,function (_p8) {    var _p9 = _p8;return !_U.eq(_p9._0,_p14);},model.todo)}); else {
-                 var updateItem = function (_p10) {
-                    var _p11 = _p10;
-                    var _p13 = _p11._1;
-                    var _p12 = _p11._0;
-                    return _U.eq(_p12,_p14) ? {ctor: "_Tuple2",_0: _p12,_1: A2($Item.update,_p16,_p13)} : {ctor: "_Tuple2",_0: _p12,_1: _p13};
+         case "Modify": var _p17 = _p1._2;
+           var _p16 = _p1._1;
+           var _p15 = _p1._0;
+           if (_U.eq(_p17,$Item.Done)) return _p16.done ? _U.update(model,
+              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p15,_1: A2($Item.update,_p17,_p16)}]))
+              ,done: A2($List.filter,function (_p7) {    var _p8 = _p7;return !_U.eq(_p8._0,_p15);},model.done)}) : _U.update(model,
+              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p15,_1: A2($Item.update,_p17,_p16)}]))
+              ,todo: A2($List.filter,function (_p9) {    var _p10 = _p9;return !_U.eq(_p10._0,_p15);},model.todo)}); else {
+                 var updateItem = function (_p11) {
+                    var _p12 = _p11;
+                    var _p14 = _p12._1;
+                    var _p13 = _p12._0;
+                    return _U.eq(_p13,_p15) ? {ctor: "_Tuple2",_0: _p13,_1: A2($Item.update,_p17,_p14)} : {ctor: "_Tuple2",_0: _p13,_1: _p14};
                  };
                  return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
               }
@@ -10758,23 +10783,37 @@ Elm.Feed.make = function (_elm) {
    });
    var AlterSort = {ctor: "AlterSort"};
    var Modify = F3(function (a,b,c) {    return {ctor: "Modify",_0: a,_1: b,_2: c};});
-   var viewItem = F2(function (address,_p17) {
-      var _p18 = _p17;
-      var _p19 = _p18._1;
-      return A2($Item.view,A2($Signal.forwardTo,address,A2(Modify,_p18._0,_p19)),_p19);
-   });
-   var view = F2(function (address,model) {
-      return A2($Html.div,
-      _U.list([]),
-      _U.list([A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
-              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),model.todo))
-              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
-              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),model.done))]));
+   var viewItem = F2(function (address,_p18) {
+      var _p19 = _p18;
+      var _p20 = _p19._1;
+      return A2($Item.view,A2($Signal.forwardTo,address,A2(Modify,_p19._0,_p20)),_p20);
    });
    var Remove = function (a) {    return {ctor: "Remove",_0: a};};
    var Add = F4(function (a,b,c,d) {    return {ctor: "Add",_0: a,_1: b,_2: c,_3: d};});
    var Next = {ctor: "Next"};
    var Previous = {ctor: "Previous"};
+   var dateComparison = F2(function (a,b) {
+      return _U.eq($Date.year(a),$Date.year(b)) ? _U.eq(monthToInt($Date.month(a)),monthToInt($Date.month(b))) ? _U.eq($Date.day(a),
+      $Date.day(b)) ? $Basics.EQ : _U.cmp($Date.day(a),$Date.day(b)) > 0 ? $Basics.GT : $Basics.LT : _U.cmp(monthToInt($Date.month(a)),
+      monthToInt($Date.month(b))) > 0 ? $Basics.GT : $Basics.LT : _U.cmp($Date.year(a),$Date.year(b)) > 0 ? $Basics.GT : $Basics.LT;
+   });
+   var customComparison = F2(function (_p22,_p21) {
+      var _p23 = _p22;
+      var _p26 = _p23._1;
+      var _p24 = _p21;
+      var _p25 = _p24._1;
+      return _p26.pinned && $Basics.not(_p25.pinned) ? $Basics.LT : $Basics.not(_p26.pinned) && _p25.pinned ? $Basics.GT : A2(dateComparison,
+      _p26.order,
+      _p25.order);
+   });
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([]),
+      _U.list([A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
+              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.todo)))
+              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
+              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done)))]));
+   });
    var bulk_init_email = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_email_attributes(record));};
    var bulk_init_reminder = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_reminder_attributes(record));};
    var initialize = A3($List.map2,
@@ -10789,6 +10828,8 @@ Elm.Feed.make = function (_elm) {
                              ,initialize: initialize
                              ,bulk_init_reminder: bulk_init_reminder
                              ,bulk_init_email: bulk_init_email
+                             ,customComparison: customComparison
+                             ,dateComparison: dateComparison
                              ,Previous: Previous
                              ,Next: Next
                              ,Add: Add
@@ -10798,7 +10839,8 @@ Elm.Feed.make = function (_elm) {
                              ,update: update
                              ,view: view
                              ,viewItem: viewItem
-                             ,headerStyle: headerStyle};
+                             ,headerStyle: headerStyle
+                             ,monthToInt: monthToInt};
 };Elm.StartApp = Elm.StartApp || {};
 Elm.StartApp.Simple = Elm.StartApp.Simple || {};
 Elm.StartApp.Simple.make = function (_elm) {
@@ -10847,16 +10889,5 @@ Elm.Main.make = function (_elm) {
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
    var _op = {};
    var main = $StartApp$Simple.start({model: $Feed.init,update: $Feed.update,view: $Feed.view});
-   var test3 = {from: "bossman@corporate.me"
-               ,to: "manager@corporate.me"
-               ,title: "Corporate Ipsum"
-               ,body: "Collaboratively administrate empowered markets via plug-and-play\n              networks. Dynamically procrastinate B2C users after installed base\n              benefits. Dramatically visualize customer directed convergence without\n              revolutionary ROI.\n\n              Efficiently unleash cross-media information without cross-media\n              value. Quickly maximize timely deliverables for real-time\n              schemas. Dramatically maintain clicks-and-mortar solutions\n              without functional solutions.\n\n              Completely synergize resource taxing relationships via premier\n              niche markets. Professionally cultivate one-to-one customer\n              service with robust ideas. Dynamically innovate\n              resource-leveling customer service for state of the art customer\n              service."
-               ,date: "2015-01-30"};
-   var test2 = {from: "hello@test.me"
-               ,to: "goodbye@test.me"
-               ,title: "Shorter than 200"
-               ,body: "This is the body of an email with less than 200 characters."
-               ,date: "2015-09-30"};
-   var test1 = {body: "Take out the trash",created: "2016-09-30"};
-   return _elm.Main.values = {_op: _op,test1: test1,test2: test2,test3: test3,main: main};
+   return _elm.Main.values = {_op: _op,main: main};
 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>
