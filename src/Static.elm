@@ -50,3 +50,7 @@ emails =
     , date = "2015-09-30"
     }
   ]
+
+get_other_reminder_attributes {body, created} = [( "body", body), ("created", created)]
+
+get_other_email_attributes {to, from, body, title, date} = [ ("to", to), ("from", from), ("title", title), ("body", body), ("date", date)]

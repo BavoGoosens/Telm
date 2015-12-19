@@ -15,12 +15,17 @@ Elm.Item.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var kaderStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border-bottom",_1: "1px solid grey"}
+                                                   ,{ctor: "_Tuple2",_0: "display",_1: "block-inline"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "width",_1: "60%"}]));
    var doneBodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
                                                       ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
                                                       ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                       ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                       ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                      ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                      ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                       ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                       ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                       ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
@@ -30,7 +35,7 @@ Elm.Item.make = function (_elm) {
                                                             ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                             ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                             ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                            ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                            ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                             ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                             ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                             ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
@@ -42,7 +47,7 @@ Elm.Item.make = function (_elm) {
                                                         ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                         ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                         ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                        ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                        ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                         ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                         ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                         ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
@@ -53,7 +58,7 @@ Elm.Item.make = function (_elm) {
                                                   ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                   ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "justify-content",_1: "space-around"}
-                                                  ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
@@ -62,7 +67,7 @@ Elm.Item.make = function (_elm) {
                                                   ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                   ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                  ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
@@ -91,7 +96,7 @@ Elm.Item.make = function (_elm) {
    var Pin = {ctor: "Pin"};
    var view = F2(function (address,model) {
       return model.truncable ? A2($Html.div,
-      _U.list([]),
+      _U.list([kaderStyle]),
       _U.list([prettyHTMLPrint(model)
               ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
               _U.list([pinnedBodyStyle]),
@@ -107,7 +112,7 @@ Elm.Item.make = function (_elm) {
                       ,A2($Html.button,
                       _U.list([A2($Html$Events.onClick,address,Truncate)]),
                       _U.list([_U.cmp($String.length(model.displayedText),200) > 0 ? $Html.text("less") : $Html.text("more")]))]))])) : A2($Html.div,
-      _U.list([]),
+      _U.list([kaderStyle]),
       _U.list([prettyHTMLPrint(model)
               ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
               _U.list([pinnedBodyStyle]),
@@ -140,5 +145,6 @@ Elm.Item.make = function (_elm) {
                              ,metaStyle: metaStyle
                              ,pinnedBodyStyle: pinnedBodyStyle
                              ,pinnedDoneBodyStyle: pinnedDoneBodyStyle
-                             ,doneBodyStyle: doneBodyStyle};
+                             ,doneBodyStyle: doneBodyStyle
+                             ,kaderStyle: kaderStyle};
 };

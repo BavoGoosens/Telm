@@ -5397,6 +5397,313 @@ Elm.Signal.make = function (_elm) {
                                ,message: message
                                ,forwardTo: forwardTo
                                ,Mailbox: Mailbox};
+};Elm.Native.Date = {};
+Elm.Native.Date.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Date = localRuntime.Native.Date || {};
+	if (localRuntime.Native.Date.values)
+	{
+		return localRuntime.Native.Date.values;
+	}
+
+	var Result = Elm.Result.make(localRuntime);
+
+	function readDate(str)
+	{
+		var date = new Date(str);
+		return isNaN(date.getTime())
+			? Result.Err('unable to parse \'' + str + '\' as a date')
+			: Result.Ok(date);
+	}
+
+	var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+	var monthTable =
+		['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+		 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+
+	return localRuntime.Native.Date.values = {
+		read: readDate,
+		year: function(d) { return d.getFullYear(); },
+		month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
+		day: function(d) { return d.getDate(); },
+		hour: function(d) { return d.getHours(); },
+		minute: function(d) { return d.getMinutes(); },
+		second: function(d) { return d.getSeconds(); },
+		millisecond: function(d) { return d.getMilliseconds(); },
+		toTime: function(d) { return d.getTime(); },
+		fromTime: function(t) { return new Date(t); },
+		dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
+	};
+};
+Elm.Native.Time = {};
+
+Elm.Native.Time.make = function(localRuntime)
+{
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Time = localRuntime.Native.Time || {};
+	if (localRuntime.Native.Time.values)
+	{
+		return localRuntime.Native.Time.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+	var Maybe = Elm.Maybe.make(localRuntime);
+
+
+	// FRAMES PER SECOND
+
+	function fpsWhen(desiredFPS, isOn)
+	{
+		var msPerFrame = 1000 / desiredFPS;
+		var ticker = NS.input('fps-' + desiredFPS, null);
+
+		function notifyTicker()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+
+		function firstArg(x, y)
+		{
+			return x;
+		}
+
+		// input fires either when isOn changes, or when ticker fires.
+		// Its value is a tuple with the current timestamp, and the state of isOn
+		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
+
+		var initialState = {
+			isOn: false,
+			time: localRuntime.timer.programStart,
+			delta: 0
+		};
+
+		var timeoutId;
+
+		function update(input, state)
+		{
+			var currentTime = input._0;
+			var isOn = input._1;
+			var wasOn = state.isOn;
+			var previousTime = state.time;
+
+			if (isOn)
+			{
+				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
+			}
+			else if (wasOn)
+			{
+				clearTimeout(timeoutId);
+			}
+
+			return {
+				isOn: isOn,
+				time: currentTime,
+				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
+			};
+		}
+
+		return A2(
+			NS.map,
+			function(state) { return state.delta; },
+			A3(NS.foldp, F2(update), update(input.value, initialState), input)
+		);
+	}
+
+
+	// EVERY
+
+	function every(t)
+	{
+		var ticker = NS.input('every-' + t, null);
+		function tellTime()
+		{
+			localRuntime.notify(ticker.id, null);
+		}
+		var clock = A2(NS.map, fst, NS.timestamp(ticker));
+		setInterval(tellTime, t);
+		return clock;
+	}
+
+
+	function fst(pair)
+	{
+		return pair._0;
+	}
+
+
+	function read(s)
+	{
+		var t = Date.parse(s);
+		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
+	}
+
+	return localRuntime.Native.Time.values = {
+		fpsWhen: F2(fpsWhen),
+		every: every,
+		toDate: function(t) { return new Date(t); },
+		read: read
+	};
+};
+Elm.Time = Elm.Time || {};
+Elm.Time.make = function (_elm) {
+   "use strict";
+   _elm.Time = _elm.Time || {};
+   if (_elm.Time.values) return _elm.Time.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Native$Signal = Elm.Native.Signal.make(_elm),
+   $Native$Time = Elm.Native.Time.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var delay = $Native$Signal.delay;
+   var since = F2(function (time,signal) {
+      var stop = A2($Signal.map,$Basics.always(-1),A2(delay,time,signal));
+      var start = A2($Signal.map,$Basics.always(1),signal);
+      var delaydiff = A3($Signal.foldp,F2(function (x,y) {    return x + y;}),0,A2($Signal.merge,start,stop));
+      return A2($Signal.map,F2(function (x,y) {    return !_U.eq(x,y);})(0),delaydiff);
+   });
+   var timestamp = $Native$Signal.timestamp;
+   var every = $Native$Time.every;
+   var fpsWhen = $Native$Time.fpsWhen;
+   var fps = function (targetFrames) {    return A2(fpsWhen,targetFrames,$Signal.constant(true));};
+   var inMilliseconds = function (t) {    return t;};
+   var millisecond = 1;
+   var second = 1000 * millisecond;
+   var minute = 60 * second;
+   var hour = 60 * minute;
+   var inHours = function (t) {    return t / hour;};
+   var inMinutes = function (t) {    return t / minute;};
+   var inSeconds = function (t) {    return t / second;};
+   return _elm.Time.values = {_op: _op
+                             ,millisecond: millisecond
+                             ,second: second
+                             ,minute: minute
+                             ,hour: hour
+                             ,inMilliseconds: inMilliseconds
+                             ,inSeconds: inSeconds
+                             ,inMinutes: inMinutes
+                             ,inHours: inHours
+                             ,fps: fps
+                             ,fpsWhen: fpsWhen
+                             ,every: every
+                             ,timestamp: timestamp
+                             ,delay: delay
+                             ,since: since};
+};Elm.Date = Elm.Date || {};
+Elm.Date.make = function (_elm) {
+   "use strict";
+   _elm.Date = _elm.Date || {};
+   if (_elm.Date.values) return _elm.Date.values;
+   var _U = Elm.Native.Utils.make(_elm),$Native$Date = Elm.Native.Date.make(_elm),$Result = Elm.Result.make(_elm),$Time = Elm.Time.make(_elm);
+   var _op = {};
+   var millisecond = $Native$Date.millisecond;
+   var second = $Native$Date.second;
+   var minute = $Native$Date.minute;
+   var hour = $Native$Date.hour;
+   var dayOfWeek = $Native$Date.dayOfWeek;
+   var day = $Native$Date.day;
+   var month = $Native$Date.month;
+   var year = $Native$Date.year;
+   var fromTime = $Native$Date.fromTime;
+   var toTime = $Native$Date.toTime;
+   var fromString = $Native$Date.read;
+   var Dec = {ctor: "Dec"};
+   var Nov = {ctor: "Nov"};
+   var Oct = {ctor: "Oct"};
+   var Sep = {ctor: "Sep"};
+   var Aug = {ctor: "Aug"};
+   var Jul = {ctor: "Jul"};
+   var Jun = {ctor: "Jun"};
+   var May = {ctor: "May"};
+   var Apr = {ctor: "Apr"};
+   var Mar = {ctor: "Mar"};
+   var Feb = {ctor: "Feb"};
+   var Jan = {ctor: "Jan"};
+   var Sun = {ctor: "Sun"};
+   var Sat = {ctor: "Sat"};
+   var Fri = {ctor: "Fri"};
+   var Thu = {ctor: "Thu"};
+   var Wed = {ctor: "Wed"};
+   var Tue = {ctor: "Tue"};
+   var Mon = {ctor: "Mon"};
+   var Date = {ctor: "Date"};
+   return _elm.Date.values = {_op: _op
+                             ,fromString: fromString
+                             ,toTime: toTime
+                             ,fromTime: fromTime
+                             ,year: year
+                             ,month: month
+                             ,day: day
+                             ,dayOfWeek: dayOfWeek
+                             ,hour: hour
+                             ,minute: minute
+                             ,second: second
+                             ,millisecond: millisecond
+                             ,Jan: Jan
+                             ,Feb: Feb
+                             ,Mar: Mar
+                             ,Apr: Apr
+                             ,May: May
+                             ,Jun: Jun
+                             ,Jul: Jul
+                             ,Aug: Aug
+                             ,Sep: Sep
+                             ,Oct: Oct
+                             ,Nov: Nov
+                             ,Dec: Dec
+                             ,Mon: Mon
+                             ,Tue: Tue
+                             ,Wed: Wed
+                             ,Thu: Thu
+                             ,Fri: Fri
+                             ,Sat: Sat
+                             ,Sun: Sun};
+};Elm.Static = Elm.Static || {};
+Elm.Static.make = function (_elm) {
+   "use strict";
+   _elm.Static = _elm.Static || {};
+   if (_elm.Static.values) return _elm.Static.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var get_other_email_attributes = function (_p0) {
+      var _p1 = _p0;
+      return _U.list([{ctor: "_Tuple2",_0: "to",_1: _p1.to}
+                     ,{ctor: "_Tuple2",_0: "from",_1: _p1.from}
+                     ,{ctor: "_Tuple2",_0: "title",_1: _p1.title}
+                     ,{ctor: "_Tuple2",_0: "body",_1: _p1.body}
+                     ,{ctor: "_Tuple2",_0: "date",_1: _p1.date}]);
+   };
+   var get_other_reminder_attributes = function (_p2) {
+      var _p3 = _p2;
+      return _U.list([{ctor: "_Tuple2",_0: "body",_1: _p3.body},{ctor: "_Tuple2",_0: "created",_1: _p3.created}]);
+   };
+   var emails = _U.list([{from: "bossman@corporate.me"
+                         ,to: "manager@corporate.me"
+                         ,title: "Corporate Ipsum"
+                         ,body: "Collaboratively administrate empowered markets via plug-and-play\n                networks. Dynamically procrastinate B2C users after installed base\n                benefits. Dramatically visualize customer directed convergence without\n                revolutionary ROI.\n\n                Efficiently unleash cross-media information without cross-media\n                value. Quickly maximize timely deliverables for real-time\n                schemas. Dramatically maintain clicks-and-mortar solutions\n                without functional solutions.\n\n                Completely synergize resource taxing relationships via premier\n                niche markets. Professionally cultivate one-to-one customer\n                service with robust ideas. Dynamically innovate\n                resource-leveling customer service for state of the art customer\n                service."
+                         ,date: "2015-01-30"}
+                        ,{from: "hello@test.me"
+                         ,to: "goodbye@test.me"
+                         ,title: "Shorter than 200"
+                         ,body: "This is the body of an email with less than 200 characters."
+                         ,date: "2015-09-30"}]);
+   var reminders = _U.list([{body: "Take out the trash",created: "2016-09-30"},{body: "Groceries",created: "2015-09-25"}]);
+   var Reminder = F2(function (a,b) {    return {body: a,created: b};});
+   var Email = F5(function (a,b,c,d,e) {    return {from: a,to: b,title: c,body: d,date: e};});
+   return _elm.Static.values = {_op: _op
+                               ,Email: Email
+                               ,Reminder: Reminder
+                               ,reminders: reminders
+                               ,emails: emails
+                               ,get_other_reminder_attributes: get_other_reminder_attributes
+                               ,get_other_email_attributes: get_other_email_attributes};
 };Elm.Native.Json = {};
 
 Elm.Native.Json.make = function(localRuntime) {
@@ -10264,12 +10571,17 @@ Elm.Item.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var kaderStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border-bottom",_1: "1px solid grey"}
+                                                   ,{ctor: "_Tuple2",_0: "display",_1: "block-inline"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "width",_1: "60%"}]));
    var doneBodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
                                                       ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
                                                       ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                       ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                       ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                      ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                      ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                       ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                       ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                       ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
@@ -10279,7 +10591,7 @@ Elm.Item.make = function (_elm) {
                                                             ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                             ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                             ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                            ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                            ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                             ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                             ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                             ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
@@ -10291,7 +10603,7 @@ Elm.Item.make = function (_elm) {
                                                         ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                         ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                         ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                        ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                        ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                         ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                         ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                         ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
@@ -10302,7 +10614,7 @@ Elm.Item.make = function (_elm) {
                                                   ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                   ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "justify-content",_1: "space-around"}
-                                                  ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
@@ -10311,7 +10623,7 @@ Elm.Item.make = function (_elm) {
                                                   ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
                                                   ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
-                                                  ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "80%"}
                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
@@ -10340,7 +10652,7 @@ Elm.Item.make = function (_elm) {
    var Pin = {ctor: "Pin"};
    var view = F2(function (address,model) {
       return model.truncable ? A2($Html.div,
-      _U.list([]),
+      _U.list([kaderStyle]),
       _U.list([prettyHTMLPrint(model)
               ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
               _U.list([pinnedBodyStyle]),
@@ -10356,7 +10668,7 @@ Elm.Item.make = function (_elm) {
                       ,A2($Html.button,
                       _U.list([A2($Html$Events.onClick,address,Truncate)]),
                       _U.list([_U.cmp($String.length(model.displayedText),200) > 0 ? $Html.text("less") : $Html.text("more")]))]))])) : A2($Html.div,
-      _U.list([]),
+      _U.list([kaderStyle]),
       _U.list([prettyHTMLPrint(model)
               ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
               _U.list([pinnedBodyStyle]),
@@ -10389,7 +10701,91 @@ Elm.Item.make = function (_elm) {
                              ,metaStyle: metaStyle
                              ,pinnedBodyStyle: pinnedBodyStyle
                              ,pinnedDoneBodyStyle: pinnedDoneBodyStyle
-                             ,doneBodyStyle: doneBodyStyle};
+                             ,doneBodyStyle: doneBodyStyle
+                             ,kaderStyle: kaderStyle};
+};Elm.Feed = Elm.Feed || {};
+Elm.Feed.make = function (_elm) {
+   "use strict";
+   _elm.Feed = _elm.Feed || {};
+   if (_elm.Feed.values) return _elm.Feed.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Item = Elm.Item.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Static = Elm.Static.make(_elm);
+   var _op = {};
+   var headerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "40px"}
+                                                    ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                    ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                    ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                    ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
+                                                    ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                    ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      switch (_p0.ctor)
+      {case "Add": return _U.update(model,
+           {todo: A2($List._op["::"],{ctor: "_Tuple2",_0: model.todoID,_1: A4($Item.init,_p0._0,_p0._1,_p0._2,_p0._3)},model.todo),todoID: model.todoID + 1});
+         case "Remove": var _p5 = _p0._0;
+           return _U.update(model,
+           {todo: A2($List.filter,function (_p1) {    var _p2 = _p1;return !_U.eq(_p2._0,_p5);},model.todo)
+           ,done: A2($List.filter,function (_p3) {    var _p4 = _p3;return !_U.eq(_p4._0,_p5);},model.done)});
+         case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
+         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
+         case "Modify": var updateItem = function (_p6) {
+              var _p7 = _p6;
+              var _p9 = _p7._1;
+              var _p8 = _p7._0;
+              return _U.eq(_p8,_p0._0) ? {ctor: "_Tuple2",_0: _p8,_1: A2($Item.update,_p0._1,_p9)} : {ctor: "_Tuple2",_0: _p8,_1: _p9};
+           };
+           return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
+         default: return model;}
+   });
+   var AlterSort = {ctor: "AlterSort"};
+   var Modify = F2(function (a,b) {    return {ctor: "Modify",_0: a,_1: b};});
+   var viewItem = F2(function (address,_p10) {    var _p11 = _p10;return A2($Item.view,A2($Signal.forwardTo,address,Modify(_p11._0)),_p11._1);});
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([]),
+      _U.list([A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
+              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),model.todo))
+              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
+              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),model.done))]));
+   });
+   var Remove = function (a) {    return {ctor: "Remove",_0: a};};
+   var Add = F4(function (a,b,c,d) {    return {ctor: "Add",_0: a,_1: b,_2: c,_3: d};});
+   var Next = {ctor: "Next"};
+   var Previous = {ctor: "Previous"};
+   var bulk_init_email = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_email_attributes(record));};
+   var bulk_init_reminder = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_reminder_attributes(record));};
+   var initialize = A3($List.map2,
+   F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),
+   _U.list([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]),
+   A2($List.append,A2($List.map,bulk_init_reminder,$Static.reminders),A2($List.map,bulk_init_email,$Static.emails)));
+   var Model = F6(function (a,b,c,d,e,f) {    return {focus: a,len: b,todo: c,done: d,todoID: e,doneID: f};});
+   var init = function () {    var wut = initialize;return A6(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),0);}();
+   return _elm.Feed.values = {_op: _op
+                             ,Model: Model
+                             ,init: init
+                             ,initialize: initialize
+                             ,bulk_init_reminder: bulk_init_reminder
+                             ,bulk_init_email: bulk_init_email
+                             ,Previous: Previous
+                             ,Next: Next
+                             ,Add: Add
+                             ,Remove: Remove
+                             ,Modify: Modify
+                             ,AlterSort: AlterSort
+                             ,update: update
+                             ,view: view
+                             ,viewItem: viewItem
+                             ,headerStyle: headerStyle};
 };Elm.StartApp = Elm.StartApp || {};
 Elm.StartApp.Simple = Elm.StartApp.Simple || {};
 Elm.StartApp.Simple.make = function (_elm) {
@@ -10430,25 +10826,14 @@ Elm.Main.make = function (_elm) {
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Item = Elm.Item.make(_elm),
+   $Feed = Elm.Feed.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
    var _op = {};
-   var get_other_email_attributes = function (_p0) {
-      var _p1 = _p0;
-      return _U.list([{ctor: "_Tuple2",_0: "to",_1: _p1.to}
-                     ,{ctor: "_Tuple2",_0: "from",_1: _p1.from}
-                     ,{ctor: "_Tuple2",_0: "title",_1: _p1.title}
-                     ,{ctor: "_Tuple2",_0: "body",_1: _p1.body}
-                     ,{ctor: "_Tuple2",_0: "date",_1: _p1.date}]);
-   };
-   var get_other_reminder_attributes = function (_p2) {
-      var _p3 = _p2;
-      return _U.list([{ctor: "_Tuple2",_0: "body",_1: _p3.body},{ctor: "_Tuple2",_0: "created",_1: _p3.created}]);
-   };
+   var main = $StartApp$Simple.start({model: $Feed.init,update: $Feed.update,view: $Feed.view});
    var test3 = {from: "bossman@corporate.me"
                ,to: "manager@corporate.me"
                ,title: "Corporate Ipsum"
@@ -10460,12 +10845,5 @@ Elm.Main.make = function (_elm) {
                ,body: "This is the body of an email with less than 200 characters."
                ,date: "2015-09-30"};
    var test1 = {body: "Take out the trash",created: "2016-09-30"};
-   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test1.body,get_other_reminder_attributes(test1)),update: $Item.update,view: $Item.view});
-   return _elm.Main.values = {_op: _op
-                             ,test1: test1
-                             ,test2: test2
-                             ,test3: test3
-                             ,main: main
-                             ,get_other_reminder_attributes: get_other_reminder_attributes
-                             ,get_other_email_attributes: get_other_email_attributes};
+   return _elm.Main.values = {_op: _op,test1: test1,test2: test2,test3: test3,main: main};
 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>

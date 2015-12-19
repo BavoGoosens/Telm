@@ -1,4 +1,6 @@
-import Item exposing (..)
+-- import Item exposing (..)
+import Feed exposing (..)
+import Static exposing (get_other_reminder_attributes, get_other_email_attributes)
 import StartApp.Simple exposing ( start )
 -- import Static exposing (Reminder, Email)
 
@@ -32,11 +34,7 @@ test3 = { from = "bossman@corporate.me"
 
 main =
   start
-  { model = init False False test1.body (get_other_reminder_attributes test1)
+  { model = Feed.init
   , update = update
   , view = view
   }
-
-get_other_reminder_attributes {body, created} = [( "body", body), ("created", created)]
-
-get_other_email_attributes {to, from, body, title, date} = [ ("to", to), ("from", from), ("title", title), ("body", body), ("date", date)]

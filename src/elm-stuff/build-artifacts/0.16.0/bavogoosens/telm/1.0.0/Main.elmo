@@ -6,25 +6,14 @@ Elm.Main.make = function (_elm) {
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Item = Elm.Item.make(_elm),
+   $Feed = Elm.Feed.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
    var _op = {};
-   var get_other_email_attributes = function (_p0) {
-      var _p1 = _p0;
-      return _U.list([{ctor: "_Tuple2",_0: "to",_1: _p1.to}
-                     ,{ctor: "_Tuple2",_0: "from",_1: _p1.from}
-                     ,{ctor: "_Tuple2",_0: "title",_1: _p1.title}
-                     ,{ctor: "_Tuple2",_0: "body",_1: _p1.body}
-                     ,{ctor: "_Tuple2",_0: "date",_1: _p1.date}]);
-   };
-   var get_other_reminder_attributes = function (_p2) {
-      var _p3 = _p2;
-      return _U.list([{ctor: "_Tuple2",_0: "body",_1: _p3.body},{ctor: "_Tuple2",_0: "created",_1: _p3.created}]);
-   };
+   var main = $StartApp$Simple.start({model: $Feed.init,update: $Feed.update,view: $Feed.view});
    var test3 = {from: "bossman@corporate.me"
                ,to: "manager@corporate.me"
                ,title: "Corporate Ipsum"
@@ -36,12 +25,5 @@ Elm.Main.make = function (_elm) {
                ,body: "This is the body of an email with less than 200 characters."
                ,date: "2015-09-30"};
    var test1 = {body: "Take out the trash",created: "2016-09-30"};
-   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test1.body,get_other_reminder_attributes(test1)),update: $Item.update,view: $Item.view});
-   return _elm.Main.values = {_op: _op
-                             ,test1: test1
-                             ,test2: test2
-                             ,test3: test3
-                             ,main: main
-                             ,get_other_reminder_attributes: get_other_reminder_attributes
-                             ,get_other_email_attributes: get_other_email_attributes};
+   return _elm.Main.values = {_op: _op,test1: test1,test2: test2,test3: test3,main: main};
 };

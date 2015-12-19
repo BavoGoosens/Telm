@@ -43,7 +43,7 @@ update action model =
 view : Signal.Address Action -> Model -> Html
 view address model =
   if model.truncable then
-    div []
+    div [kaderStyle]
       [ prettyHTMLPrint model
       , if model.pinned && not model.done then
           div [ pinnedBodyStyle ] [ text model.displayedText ]
@@ -59,7 +59,7 @@ view address model =
         ]
       ]
   else
-    div []
+    div [kaderStyle]
       [ prettyHTMLPrint model
       , if model.pinned && not model.done then
           div [ pinnedBodyStyle ] [ text model.displayedText ]
@@ -91,7 +91,7 @@ bodyStyle =
     , ("display", "flex")
     , ("align-items", "center")
     , ("justify-content", "center")
-    , ("width", "60%")
+    , ("width", "80%")
     , ("text-align", "center")
     , ("margin-left", "auto")
     , ("margin-right", "auto")
@@ -105,7 +105,7 @@ metaStyle =
     , ("display", "flex")
     , ("align-items", "center")
     , ("justify-content", "space-around")
-    , ("width", "60%")
+    , ("width", "80%")
     , ("text-align", "center")
     , ("margin-left", "auto")
     , ("margin-right", "auto")
@@ -119,7 +119,7 @@ pinnedBodyStyle =
       , ("display", "flex")
       , ("align-items", "center")
       , ("justify-content", "center")
-      , ("width", "60%")
+      , ("width", "80%")
       , ("text-align", "center")
       , ("margin-left", "auto")
       , ("margin-right", "auto")
@@ -135,7 +135,7 @@ pinnedDoneBodyStyle =
       , ("display", "flex")
       , ("align-items", "center")
       , ("justify-content", "center")
-      , ("width", "60%")
+      , ("width", "80%")
       , ("text-align", "center")
       , ("margin-left", "auto")
       , ("margin-right", "auto")
@@ -152,9 +152,19 @@ doneBodyStyle =
     , ("display", "flex")
     , ("align-items", "center")
     , ("justify-content", "center")
-    , ("width", "60%")
+    , ("width", "80%")
     , ("text-align", "center")
     , ("margin-left", "auto")
     , ("margin-right", "auto")
     , ("opacity", "0.5")
+    ]
+
+kaderStyle : Attribute
+kaderStyle =
+  style
+    [ ("border-bottom" , "1px solid grey")
+    , ("display", "block-inline")
+    , ("margin-left", "auto")
+    , ("margin-right", "auto")
+    , ("width", "60%")
     ]

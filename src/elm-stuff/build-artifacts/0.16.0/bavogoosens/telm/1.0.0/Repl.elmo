@@ -12,7 +12,7 @@ Elm.Repl.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm);
    var _op = {};
    var tsol = {ctor: "_Tuple0"};
-   var lijst = _U.list([1,3,4,5,6,6,77,4]);
-   var deltron3030 = A2($List.take,2,lijst);
-   return _elm.Repl.values = {_op: _op,deltron3030: deltron3030,lijst: lijst,tsol: tsol};
+   var r = {jos: "ets",jef: "wow"};
+   var deltron3030 = A2($Basics._op["++"],_U.list([1,2,3,4]),_U.list([1]));
+   return _elm.Repl.values = {_op: _op,deltron3030: deltron3030,r: r,tsol: tsol};
 };
