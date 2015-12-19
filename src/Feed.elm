@@ -28,7 +28,7 @@ init =
 
 initialize: List ( ID, Item.Model)
 initialize =
-  List.map2 (,) [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] 
+  List.map2 (,) [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
     (List.append (List.map bulk_init_reminder reminders) (List.map bulk_init_email emails))
 
 bulk_init_reminder record =
@@ -44,7 +44,7 @@ type Action
     | Next
     | Add Bool Bool String (List (String, String))
     | Remove ID
-    | Modify ID Item.Action
+    | Modify ID Item.Model Item.Action
     | AlterSort
 
 update : Action -> Model -> Model
@@ -68,13 +68,26 @@ update action model =
                   {model | focus = model.focus - 1}
                 else
                   {model | focus = model.len}
-    Modify id itemAction ->
-      let updateItem (itemID, itemModel) =
-            if itemID == id
-                then (itemID, Item.update itemAction itemModel)
-                else (itemID, itemModel)
-      in
-          { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
+    Modify id item itemAction ->
+      if itemAction == Done then
+            if item.done then
+                  -- copy back to todo
+                  {model |
+                    todo = model.todo ++ [(id, Item.update itemAction item)],
+                    done = List.filter (\(itemID, _) -> itemID /= id) model.done
+                  }
+            else
+                  {model |
+                    done = model.done ++ [(id, Item.update itemAction item)],
+                    todo = List.filter (\(itemID, _) -> itemID /= id) model.todo
+                  }
+      else
+        let updateItem (itemID, itemModel) =
+              if itemID == id
+                  then (itemID, Item.update itemAction itemModel)
+                  else (itemID, itemModel)
+        in
+            { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
     AlterSort -> model
 
 -- VIEW
@@ -90,7 +103,7 @@ view address model =
 
 viewItem : Signal.Address Action -> (ID, Item.Model) -> Html
 viewItem address (id, model) =
-  Item.view (Signal.forwardTo address (Modify id)) model
+  Item.view (Signal.forwardTo address (Modify id model)) model
 
 headerStyle : Attribute
 headerStyle =
