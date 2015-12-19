@@ -53,7 +53,7 @@ update action model =
                 then (itemID, Item.update itemAction itemModel)
                 else (itemID, itemModel)
       in
-          { model | todo = List.map updateItem model.todo, done = List.map updateItem updateItem model.done }
+          { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
     AlterSort -> model
 
 -- VIEW

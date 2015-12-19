@@ -10264,15 +10264,71 @@ Elm.Item.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var doneBodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
+                                                      ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                      ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                      ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
+                                                      ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
+                                                      ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                      ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                      ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                      ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                      ,{ctor: "_Tuple2",_0: "opacity",_1: "0.5"}]));
+   var pinnedDoneBodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
+                                                            ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                            ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                            ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
+                                                            ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
+                                                            ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                            ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                            ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                            ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                            ,{ctor: "_Tuple2",_0: "border-left",_1: "2px solid red"}
+                                                            ,{ctor: "_Tuple2",_0: "padding-left",_1: "2px"}
+                                                            ,{ctor: "_Tuple2",_0: "opacity",_1: "0.5"}]));
+   var pinnedBodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
+                                                        ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                        ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                        ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
+                                                        ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
+                                                        ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                        ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                        ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                        ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                        ,{ctor: "_Tuple2",_0: "border-left",_1: "2px solid red"}
+                                                        ,{ctor: "_Tuple2",_0: "padding-left",_1: "2px"}]));
+   var metaStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "14px"}
+                                                  ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                  ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                  ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
+                                                  ,{ctor: "_Tuple2",_0: "justify-content",_1: "space-around"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                  ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                  ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                  ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
    var bodyStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "20px"}
                                                   ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
-                                                  ,{ctor: "_Tuple2",_0: "display",_1: "inline-block"}
-                                                  ,{ctor: "_Tuple2",_0: "width",_1: "400px"}
-                                                  ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}]));
-   var tupleToString = function (_p0) {    var _p1 = _p0;return A2($Basics._op["++"],_p1._0,A2($Basics._op["++"]," ",_p1._1));};
+                                                  ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                  ,{ctor: "_Tuple2",_0: "align-items",_1: "center"}
+                                                  ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}
+                                                  ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                  ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                  ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                  ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
+   var prettyHTMLPrint = function (model) {
+      return A2($Html.div,
+      _U.list([metaStyle]),
+      function () {
+         var tupleprint = function (_p0) {
+            var _p1 = _p0;
+            return A2($Html.p,_U.list([]),_U.list([$Html.text(A2($Basics._op["++"],_p1._0,A2($Basics._op["++"],": ",_p1._1)))]));
+         };
+         return A2($List.map,tupleprint,A2($List.filter,function (_p2) {    var _p3 = _p2;return !_U.eq(_p3._0,"body");},model.params));
+      }());
+   };
    var update = F2(function (action,model) {
-      var _p2 = action;
-      switch (_p2.ctor)
+      var _p4 = action;
+      switch (_p4.ctor)
       {case "Pin": return _U.update(model,{pinned: $Basics.not(model.pinned)});
          case "Done": return _U.update(model,{done: $Basics.not(model.done)});
          default: return model.truncable && _U.cmp($String.length(model.displayedText),200) < 1 ? _U.update(model,
@@ -10283,15 +10339,38 @@ Elm.Item.make = function (_elm) {
    var Truncate = {ctor: "Truncate"};
    var Pin = {ctor: "Pin"};
    var view = F2(function (address,model) {
-      return A2($Html.div,
+      return model.truncable ? A2($Html.div,
       _U.list([]),
-      _U.list([A2($Html.div,_U.list([bodyStyle]),_U.list([$Html.text($Basics.toString(model.displayedText))]))
-              ,A2($Html.br,_U.list([]),_U.list([]))
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Pin)]),_U.list([model.pinned ? $Html.text("Unpin") : $Html.text("Pin")]))
-              ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Done)]),_U.list([model.done ? $Html.text("Undo") : $Html.text("Mark Done")]))
-              ,A2($Html.button,
-              _U.list([A2($Html$Events.onClick,address,Truncate)]),
-              _U.list([_U.cmp($String.length(model.displayedText),200) > 0 ? $Html.text("less") : $Html.text("more")]))]));
+      _U.list([prettyHTMLPrint(model)
+              ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
+              _U.list([pinnedBodyStyle]),
+              _U.list([$Html.text(model.displayedText)])) : model.done && model.pinned ? A2($Html.div,
+              _U.list([pinnedDoneBodyStyle]),
+              _U.list([$Html.text(model.displayedText)])) : model.done && $Basics.not(model.pinned) ? A2($Html.div,
+              _U.list([doneBodyStyle]),
+              _U.list([$Html.text(model.displayedText)])) : A2($Html.div,_U.list([bodyStyle]),_U.list([$Html.text(model.displayedText)]))
+              ,A2($Html.p,
+              _U.list([bodyStyle]),
+              _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,Pin)]),_U.list([model.pinned ? $Html.text("Unpin") : $Html.text("Pin")]))
+                      ,A2($Html.button,_U.list([A2($Html$Events.onClick,address,Done)]),_U.list([model.done ? $Html.text("Undo") : $Html.text("Mark Done")]))
+                      ,A2($Html.button,
+                      _U.list([A2($Html$Events.onClick,address,Truncate)]),
+                      _U.list([_U.cmp($String.length(model.displayedText),200) > 0 ? $Html.text("less") : $Html.text("more")]))]))])) : A2($Html.div,
+      _U.list([]),
+      _U.list([prettyHTMLPrint(model)
+              ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
+              _U.list([pinnedBodyStyle]),
+              _U.list([$Html.text(model.displayedText)])) : model.done && model.pinned ? A2($Html.div,
+              _U.list([pinnedDoneBodyStyle]),
+              _U.list([$Html.text(model.displayedText)])) : model.done && $Basics.not(model.pinned) ? A2($Html.div,
+              _U.list([doneBodyStyle]),
+              _U.list([$Html.text(model.displayedText)])) : A2($Html.div,_U.list([bodyStyle]),_U.list([$Html.text(model.displayedText)]))
+              ,A2($Html.p,
+              _U.list([bodyStyle]),
+              _U.list([A2($Html.button,_U.list([A2($Html$Events.onClick,address,Pin)]),_U.list([model.pinned ? $Html.text("Unpin") : $Html.text("Pin")]))
+                      ,A2($Html.button,
+                      _U.list([A2($Html$Events.onClick,address,Done)]),
+                      _U.list([model.done ? $Html.text("Undo") : $Html.text("Mark Done")]))]))]));
    });
    var Model = F6(function (a,b,c,d,e,f) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,params: f};});
    var init = F4(function (done,pinned,body,params) {
@@ -10305,8 +10384,12 @@ Elm.Item.make = function (_elm) {
                              ,Done: Done
                              ,update: update
                              ,view: view
-                             ,tupleToString: tupleToString
-                             ,bodyStyle: bodyStyle};
+                             ,prettyHTMLPrint: prettyHTMLPrint
+                             ,bodyStyle: bodyStyle
+                             ,metaStyle: metaStyle
+                             ,pinnedBodyStyle: pinnedBodyStyle
+                             ,pinnedDoneBodyStyle: pinnedDoneBodyStyle
+                             ,doneBodyStyle: doneBodyStyle};
 };Elm.StartApp = Elm.StartApp || {};
 Elm.StartApp.Simple = Elm.StartApp.Simple || {};
 Elm.StartApp.Simple.make = function (_elm) {
@@ -10371,13 +10454,13 @@ Elm.Main.make = function (_elm) {
                ,title: "Corporate Ipsum"
                ,body: "Collaboratively administrate empowered markets via plug-and-play\n              networks. Dynamically procrastinate B2C users after installed base\n              benefits. Dramatically visualize customer directed convergence without\n              revolutionary ROI.\n\n              Efficiently unleash cross-media information without cross-media\n              value. Quickly maximize timely deliverables for real-time\n              schemas. Dramatically maintain clicks-and-mortar solutions\n              without functional solutions.\n\n              Completely synergize resource taxing relationships via premier\n              niche markets. Professionally cultivate one-to-one customer\n              service with robust ideas. Dynamically innovate\n              resource-leveling customer service for state of the art customer\n              service."
                ,date: "2015-01-30"};
-   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test3.body,get_other_email_attributes(test3)),update: $Item.update,view: $Item.view});
    var test2 = {from: "hello@test.me"
                ,to: "goodbye@test.me"
                ,title: "Shorter than 200"
                ,body: "This is the body of an email with less than 200 characters."
                ,date: "2015-09-30"};
    var test1 = {body: "Take out the trash",created: "2016-09-30"};
+   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test1.body,get_other_reminder_attributes(test1)),update: $Item.update,view: $Item.view});
    return _elm.Main.values = {_op: _op
                              ,test1: test1
                              ,test2: test2

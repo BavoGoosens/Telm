@@ -30,13 +30,13 @@ Elm.Main.make = function (_elm) {
                ,title: "Corporate Ipsum"
                ,body: "Collaboratively administrate empowered markets via plug-and-play\n              networks. Dynamically procrastinate B2C users after installed base\n              benefits. Dramatically visualize customer directed convergence without\n              revolutionary ROI.\n\n              Efficiently unleash cross-media information without cross-media\n              value. Quickly maximize timely deliverables for real-time\n              schemas. Dramatically maintain clicks-and-mortar solutions\n              without functional solutions.\n\n              Completely synergize resource taxing relationships via premier\n              niche markets. Professionally cultivate one-to-one customer\n              service with robust ideas. Dynamically innovate\n              resource-leveling customer service for state of the art customer\n              service."
                ,date: "2015-01-30"};
-   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test3.body,get_other_email_attributes(test3)),update: $Item.update,view: $Item.view});
    var test2 = {from: "hello@test.me"
                ,to: "goodbye@test.me"
                ,title: "Shorter than 200"
                ,body: "This is the body of an email with less than 200 characters."
                ,date: "2015-09-30"};
    var test1 = {body: "Take out the trash",created: "2016-09-30"};
+   var main = $StartApp$Simple.start({model: A4($Item.init,false,false,test1.body,get_other_reminder_attributes(test1)),update: $Item.update,view: $Item.view});
    return _elm.Main.values = {_op: _op
                              ,test1: test1
                              ,test2: test2

@@ -32,7 +32,7 @@ test3 = { from = "bossman@corporate.me"
 
 main =
   start
-  { model = init False False test3.body (get_other_email_attributes test3)
+  { model = init False False test1.body (get_other_reminder_attributes test1)
   , update = update
   , view = view
   }
