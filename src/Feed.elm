@@ -20,8 +20,10 @@ type alias Model =
   , done: List ( ID, Item.Model )
   , todoID: ID
   , input: Bool
+  , showTodo: Bool
   , currentReminder: String
   , currentDate: String
+  , reverseSort: Bool
   }
 
 type alias ID = Int
@@ -32,7 +34,7 @@ init =
   let wut =
         initialize
   in
-        Model 0 (List.length wut) wut [] (List.length wut) True "" ""
+        Model 0 (List.length wut) wut [] (List.length wut) True True "" "" False
 
 initialize: List ( ID, Item.Model)
 initialize =
@@ -103,7 +105,8 @@ type Action
     | Remove ID
     | Modify ID Item.Model Item.Action
     | AlterSort
-    | Hide
+    | HideInput
+    | HideTodo
     | ReadInput
     | TruncateFocussed
     | PinFocussed
@@ -149,7 +152,8 @@ update action model =
         in
             { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
     AlterSort -> model
-    Hide -> {model | input = not model.input}
+    HideInput -> {model | input = not model.input}
+    HideTodo -> {model | showTodo = not model.showTodo }
     ReadInput -> {model |
                     todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder
                       [("body", model.currentReminder), ("created", model.currentDate)] )],
@@ -177,21 +181,29 @@ view address model =
         , inputStyle
         ][]
         ,input [
-        type' "date"
+          type' "date"
         , name "when"
         , on "input" targetValue (Signal.message address << ReminderDate)
         , inputStyle
         ][]
         , button [inputStyle, onClick address ReadInput] [text "add"]
-        , button [inputStyle, onClick address Hide] [text "hide"]
+        , button [inputStyle, onClick address HideInput] [text "hide"]
       ]
     else
-      div [footerStyle] [button [inputStyle, onClick address Hide] [text "show"]]
+      div [footerStyle] [button [inputStyle, onClick address HideInput] [text "show"]]
     , h1 [headerStyle] [text "Todo "]
     , div [] (List.map (viewItem address) (List.sortWith customComparison model.todo))
     , h1 [headerStyle] [text "Done "]
-    , div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
+    , if model.showTodo then
+        div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
+      else
+        p [] []
+    -- , Signal.map display Keyboard.keysDown
     ]
+
+display : Set.Set Int -> Html
+display keyCodes =
+    text ("You are holding down the following keys: " ++ toString (Set.toList keyCodes))
 
 viewItem : Signal.Address Action -> (ID, Item.Model) -> Html
 viewItem address (id, model) =
@@ -208,8 +220,6 @@ model =
 initialModel : Model
 initialModel =
   init
-
--- Signal.map parseKeyCode Keyboard.keysDown
 
 parseKeyCode : Set.Set (Char.KeyCode) -> Action
 parseKeyCode set =
@@ -237,7 +247,13 @@ parseKeyCode set =
                   if List.member 83 lijst then
                     AlterSort
                   else
-                    NoOp
+                    if List.member 72 lijst then
+                      HideInput
+                    else
+                      if List.member 68 lijst then
+                        HideTodo
+                      else
+                        NoOp
       else
         NoOp
 

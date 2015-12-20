@@ -41,6 +41,9 @@ Elm.Feed.make = function (_elm) {
                                                     ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
                                                     ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                     ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
+   var display = function (keyCodes) {
+      return $Html.text(A2($Basics._op["++"],"You are holding down the following keys: ",$Basics.toString($Set.toList(keyCodes))));
+   };
    var update = F2(function (action,model) {
       var _p0 = action;
       switch (_p0.ctor)
@@ -68,7 +71,8 @@ Elm.Feed.make = function (_elm) {
                  return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
               }
          case "AlterSort": return model;
-         case "Hide": return _U.update(model,{input: $Basics.not(model.input)});
+         case "HideInput": return _U.update(model,{input: $Basics.not(model.input)});
+         case "HideTodo": return _U.update(model,{showTodo: $Basics.not(model.showTodo)});
          case "ReadInput": return _U.update(model,
            {todo: A2($Basics._op["++"],
            model.todo,
@@ -92,7 +96,8 @@ Elm.Feed.make = function (_elm) {
    var PinFocussed = {ctor: "PinFocussed"};
    var TruncateFocussed = {ctor: "TruncateFocussed"};
    var ReadInput = {ctor: "ReadInput"};
-   var Hide = {ctor: "Hide"};
+   var HideTodo = {ctor: "HideTodo"};
+   var HideInput = {ctor: "HideInput"};
    var AlterSort = {ctor: "AlterSort"};
    var Modify = F3(function (a,b,c) {    return {ctor: "Modify",_0: a,_1: b,_2: c};});
    var viewItem = F2(function (address,_p17) {
@@ -111,7 +116,9 @@ Elm.Feed.make = function (_elm) {
       75,
       lijst) ? Previous : A2($List.member,79,lijst) ? TruncateFocussed : A2($List.member,80,lijst) ? PinFocussed : A2($List.member,
       88,
-      lijst) ? FinishFocussed : A2($List.member,83,lijst) ? AlterSort : NoOp : NoOp;
+      lijst) ? FinishFocussed : A2($List.member,83,lijst) ? AlterSort : A2($List.member,72,lijst) ? HideInput : A2($List.member,
+      68,
+      lijst) ? HideTodo : NoOp : NoOp;
    };
    var monthToInt = function (month) {
       var _p20 = month;
@@ -162,13 +169,15 @@ Elm.Feed.make = function (_elm) {
                               ,inputStyle]),
                       _U.list([]))
                       ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,ReadInput)]),_U.list([$Html.text("add")]))
-                      ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,Hide)]),_U.list([$Html.text("hide")]))])) : A2($Html.div,
+                      ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,HideInput)]),_U.list([$Html.text("hide")]))])) : A2($Html.div,
               _U.list([footerStyle]),
-              _U.list([A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,Hide)]),_U.list([$Html.text("show")]))]))
+              _U.list([A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,HideInput)]),_U.list([$Html.text("show")]))]))
               ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
               ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.todo)))
               ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
-              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done)))]));
+              ,model.showTodo ? A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done))) : A2($Html.p,
+              _U.list([]),
+              _U.list([]))]));
    });
    var bulk_init_email = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_email_attributes(record));};
    var bulk_init_reminder = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_reminder_attributes(record));};
@@ -176,8 +185,28 @@ Elm.Feed.make = function (_elm) {
    F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),
    _U.list([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]),
    A2($List.append,A2($List.map,bulk_init_reminder,$Static.reminders),A2($List.map,bulk_init_email,$Static.emails)));
-   var Model = F8(function (a,b,c,d,e,f,g,h) {    return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,currentReminder: g,currentDate: h};});
-   var init = function () {    var wut = initialize;return A8(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),true,"","");}();
+   var Model = function (a) {
+      return function (b) {
+         return function (c) {
+            return function (d) {
+               return function (e) {
+                  return function (f) {
+                     return function (g) {
+                        return function (h) {
+                           return function (i) {
+                              return function (j) {
+                                 return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,showTodo: g,currentReminder: h,currentDate: i,reverseSort: j};
+                              };
+                           };
+                        };
+                     };
+                  };
+               };
+            };
+         };
+      };
+   };
+   var init = function () {    var wut = initialize;return Model(0)($List.length(wut))(wut)(_U.list([]))($List.length(wut))(true)(true)("")("")(false);}();
    var initialModel = init;
    var model = A3($Signal.foldp,update,initialModel,A2($Signal.merge,A2($Signal.map,parseKeyCode,$Keyboard.keysDown),actions.signal));
    return _elm.Feed.values = {_op: _op
@@ -195,7 +224,8 @@ Elm.Feed.make = function (_elm) {
                              ,Remove: Remove
                              ,Modify: Modify
                              ,AlterSort: AlterSort
-                             ,Hide: Hide
+                             ,HideInput: HideInput
+                             ,HideTodo: HideTodo
                              ,ReadInput: ReadInput
                              ,TruncateFocussed: TruncateFocussed
                              ,PinFocussed: PinFocussed
@@ -204,6 +234,7 @@ Elm.Feed.make = function (_elm) {
                              ,ReminderDate: ReminderDate
                              ,update: update
                              ,view: view
+                             ,display: display
                              ,viewItem: viewItem
                              ,actions: actions
                              ,model: model
