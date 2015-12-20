@@ -6,8 +6,10 @@ import Date exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Keyboard
+import Keyboard exposing (..)
 import Set
+import Char
+
 
 -- MODEL
 
@@ -96,13 +98,16 @@ monthToInt month =
 
 type Action
     = NoOp
-    |Previous
+    | Previous
     | Next
     | Remove ID
     | Modify ID Item.Model Item.Action
     | AlterSort
     | Hide
     | ReadInput
+    | TruncateFocussed
+    | PinFocussed
+    | FinishFocussed
     | ReminderBody String
     | ReminderDate String
 
@@ -146,11 +151,15 @@ update action model =
     AlterSort -> model
     Hide -> {model | input = not model.input}
     ReadInput -> {model |
-                    todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder [("body", model.currentReminder), ("created", model.currentDate)] )],
+                    todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder
+                      [("body", model.currentReminder), ("created", model.currentDate)] )],
                     todoID = model.todoID + 1
                   }
     ReminderBody reminder -> {model | currentReminder = reminder}
     ReminderDate date -> {model | currentDate = date}
+    TruncateFocussed -> model
+    PinFocussed -> model
+    FinishFocussed -> model
 
 
 -- VIEW
@@ -184,10 +193,6 @@ view address model =
     , div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
     ]
 
-remindMe : Signal.Mailbox String
-remindMe =
-  Signal.mailbox ""
-
 viewItem : Signal.Address Action -> (ID, Item.Model) -> Html
 viewItem address (id, model) =
   Item.view (Signal.forwardTo address (Modify id model)) model
@@ -198,11 +203,45 @@ actions =
 
 model : Signal Model
 model =
-  Signal.foldp update initialModel actions.signal
+  Signal.foldp update initialModel (Signal.merge (Signal.map parseKeyCode Keyboard.keysDown) actions.signal)
 
 initialModel : Model
 initialModel =
   init
+
+-- Signal.map parseKeyCode Keyboard.keysDown
+
+parseKeyCode : Set.Set (Char.KeyCode) -> Action
+parseKeyCode set =
+  let lijst = Set.toList set
+  in
+    if List.length lijst /= 2 then
+      NoOp
+    else
+      if List.member 18 lijst then
+        if List.member 74 lijst then
+          Next
+        else
+          if List.member 75 lijst then
+            Previous
+          else
+            if List.member 79 lijst then
+              TruncateFocussed
+            else
+              if List.member 80 lijst then
+                PinFocussed
+              else
+                if List.member 88 lijst then
+                  FinishFocussed
+                else
+                  if List.member 83 lijst then
+                    AlterSort
+                  else
+                    NoOp
+      else
+        NoOp
+
+
 -- Style details
 
 headerStyle : Attribute

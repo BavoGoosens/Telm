@@ -5,15 +5,18 @@ Elm.Feed.make = function (_elm) {
    if (_elm.Feed.values) return _elm.Feed.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Char = Elm.Char.make(_elm),
    $Date = Elm.Date.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
    $Item = Elm.Item.make(_elm),
+   $Keyboard = Elm.Keyboard.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
+   $Set = Elm.Set.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Static = Elm.Static.make(_elm);
    var _op = {};
@@ -38,7 +41,6 @@ Elm.Feed.make = function (_elm) {
                                                     ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
                                                     ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
                                                     ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
-   var remindMe = $Signal.mailbox("");
    var update = F2(function (action,model) {
       var _p0 = action;
       switch (_p0.ctor)
@@ -79,10 +81,16 @@ Elm.Feed.make = function (_elm) {
                     _U.list([{ctor: "_Tuple2",_0: "body",_1: model.currentReminder},{ctor: "_Tuple2",_0: "created",_1: model.currentDate}]))}]))
            ,todoID: model.todoID + 1});
          case "ReminderBody": return _U.update(model,{currentReminder: _p0._0});
-         default: return _U.update(model,{currentDate: _p0._0});}
+         case "ReminderDate": return _U.update(model,{currentDate: _p0._0});
+         case "TruncateFocussed": return model;
+         case "PinFocussed": return model;
+         default: return model;}
    });
    var ReminderDate = function (a) {    return {ctor: "ReminderDate",_0: a};};
    var ReminderBody = function (a) {    return {ctor: "ReminderBody",_0: a};};
+   var FinishFocussed = {ctor: "FinishFocussed"};
+   var PinFocussed = {ctor: "PinFocussed"};
+   var TruncateFocussed = {ctor: "TruncateFocussed"};
    var ReadInput = {ctor: "ReadInput"};
    var Hide = {ctor: "Hide"};
    var AlterSort = {ctor: "AlterSort"};
@@ -97,6 +105,14 @@ Elm.Feed.make = function (_elm) {
    var Previous = {ctor: "Previous"};
    var NoOp = {ctor: "NoOp"};
    var actions = $Signal.mailbox(NoOp);
+   var parseKeyCode = function (set) {
+      var lijst = $Set.toList(set);
+      return !_U.eq($List.length(lijst),2) ? NoOp : A2($List.member,18,lijst) ? A2($List.member,74,lijst) ? Next : A2($List.member,
+      75,
+      lijst) ? Previous : A2($List.member,79,lijst) ? TruncateFocussed : A2($List.member,80,lijst) ? PinFocussed : A2($List.member,
+      88,
+      lijst) ? FinishFocussed : A2($List.member,83,lijst) ? AlterSort : NoOp : NoOp;
+   };
    var monthToInt = function (month) {
       var _p20 = month;
       switch (_p20.ctor)
@@ -163,7 +179,7 @@ Elm.Feed.make = function (_elm) {
    var Model = F8(function (a,b,c,d,e,f,g,h) {    return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,currentReminder: g,currentDate: h};});
    var init = function () {    var wut = initialize;return A8(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),true,"","");}();
    var initialModel = init;
-   var model = A3($Signal.foldp,update,initialModel,actions.signal);
+   var model = A3($Signal.foldp,update,initialModel,A2($Signal.merge,A2($Signal.map,parseKeyCode,$Keyboard.keysDown),actions.signal));
    return _elm.Feed.values = {_op: _op
                              ,Model: Model
                              ,init: init
@@ -181,15 +197,18 @@ Elm.Feed.make = function (_elm) {
                              ,AlterSort: AlterSort
                              ,Hide: Hide
                              ,ReadInput: ReadInput
+                             ,TruncateFocussed: TruncateFocussed
+                             ,PinFocussed: PinFocussed
+                             ,FinishFocussed: FinishFocussed
                              ,ReminderBody: ReminderBody
                              ,ReminderDate: ReminderDate
                              ,update: update
                              ,view: view
-                             ,remindMe: remindMe
                              ,viewItem: viewItem
                              ,actions: actions
                              ,model: model
                              ,initialModel: initialModel
+                             ,parseKeyCode: parseKeyCode
                              ,headerStyle: headerStyle
                              ,inputStyle: inputStyle
                              ,footerStyle: footerStyle};
