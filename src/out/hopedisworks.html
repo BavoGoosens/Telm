@@ -10711,6 +10711,163 @@ Elm.Item.make = function (_elm) {
                              ,pinnedDoneBodyStyle: pinnedDoneBodyStyle
                              ,doneBodyStyle: doneBodyStyle
                              ,kaderStyle: kaderStyle};
+};Elm.Set = Elm.Set || {};
+Elm.Set.make = function (_elm) {
+   "use strict";
+   _elm.Set = _elm.Set || {};
+   if (_elm.Set.values) return _elm.Set.values;
+   var _U = Elm.Native.Utils.make(_elm),$Basics = Elm.Basics.make(_elm),$Dict = Elm.Dict.make(_elm),$List = Elm.List.make(_elm);
+   var _op = {};
+   var foldr = F3(function (f,b,_p0) {    var _p1 = _p0;return A3($Dict.foldr,F3(function (k,_p2,b) {    return A2(f,k,b);}),b,_p1._0);});
+   var foldl = F3(function (f,b,_p3) {    var _p4 = _p3;return A3($Dict.foldl,F3(function (k,_p5,b) {    return A2(f,k,b);}),b,_p4._0);});
+   var toList = function (_p6) {    var _p7 = _p6;return $Dict.keys(_p7._0);};
+   var size = function (_p8) {    var _p9 = _p8;return $Dict.size(_p9._0);};
+   var member = F2(function (k,_p10) {    var _p11 = _p10;return A2($Dict.member,k,_p11._0);});
+   var isEmpty = function (_p12) {    var _p13 = _p12;return $Dict.isEmpty(_p13._0);};
+   var Set_elm_builtin = function (a) {    return {ctor: "Set_elm_builtin",_0: a};};
+   var empty = Set_elm_builtin($Dict.empty);
+   var singleton = function (k) {    return Set_elm_builtin(A2($Dict.singleton,k,{ctor: "_Tuple0"}));};
+   var insert = F2(function (k,_p14) {    var _p15 = _p14;return Set_elm_builtin(A3($Dict.insert,k,{ctor: "_Tuple0"},_p15._0));});
+   var fromList = function (xs) {    return A3($List.foldl,insert,empty,xs);};
+   var map = F2(function (f,s) {    return fromList(A2($List.map,f,toList(s)));});
+   var remove = F2(function (k,_p16) {    var _p17 = _p16;return Set_elm_builtin(A2($Dict.remove,k,_p17._0));});
+   var union = F2(function (_p19,_p18) {    var _p20 = _p19;var _p21 = _p18;return Set_elm_builtin(A2($Dict.union,_p20._0,_p21._0));});
+   var intersect = F2(function (_p23,_p22) {    var _p24 = _p23;var _p25 = _p22;return Set_elm_builtin(A2($Dict.intersect,_p24._0,_p25._0));});
+   var diff = F2(function (_p27,_p26) {    var _p28 = _p27;var _p29 = _p26;return Set_elm_builtin(A2($Dict.diff,_p28._0,_p29._0));});
+   var filter = F2(function (p,_p30) {    var _p31 = _p30;return Set_elm_builtin(A2($Dict.filter,F2(function (k,_p32) {    return p(k);}),_p31._0));});
+   var partition = F2(function (p,_p33) {
+      var _p34 = _p33;
+      var _p35 = A2($Dict.partition,F2(function (k,_p36) {    return p(k);}),_p34._0);
+      var p1 = _p35._0;
+      var p2 = _p35._1;
+      return {ctor: "_Tuple2",_0: Set_elm_builtin(p1),_1: Set_elm_builtin(p2)};
+   });
+   return _elm.Set.values = {_op: _op
+                            ,empty: empty
+                            ,singleton: singleton
+                            ,insert: insert
+                            ,remove: remove
+                            ,isEmpty: isEmpty
+                            ,member: member
+                            ,size: size
+                            ,foldl: foldl
+                            ,foldr: foldr
+                            ,map: map
+                            ,filter: filter
+                            ,partition: partition
+                            ,union: union
+                            ,intersect: intersect
+                            ,diff: diff
+                            ,toList: toList
+                            ,fromList: fromList};
+};Elm.Native.Keyboard = {};
+
+Elm.Native.Keyboard.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Keyboard = localRuntime.Native.Keyboard || {};
+	if (localRuntime.Native.Keyboard.values)
+	{
+		return localRuntime.Native.Keyboard.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+
+
+	function keyEvent(event)
+	{
+		return {
+			alt: event.altKey,
+			meta: event.metaKey,
+			keyCode: event.keyCode
+		};
+	}
+
+
+	function keyStream(node, eventName, handler)
+	{
+		var stream = NS.input(eventName, { alt: false, meta: false, keyCode: 0 });
+
+		localRuntime.addListener([stream.id], node, eventName, function(e) {
+			localRuntime.notify(stream.id, handler(e));
+		});
+
+		return stream;
+	}
+
+	var downs = keyStream(document, 'keydown', keyEvent);
+	var ups = keyStream(document, 'keyup', keyEvent);
+	var presses = keyStream(document, 'keypress', keyEvent);
+	var blurs = keyStream(window, 'blur', function() { return null; });
+
+
+	return localRuntime.Native.Keyboard.values = {
+		downs: downs,
+		ups: ups,
+		blurs: blurs,
+		presses: presses
+	};
+};
+Elm.Keyboard = Elm.Keyboard || {};
+Elm.Keyboard.make = function (_elm) {
+   "use strict";
+   _elm.Keyboard = _elm.Keyboard || {};
+   if (_elm.Keyboard.values) return _elm.Keyboard.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Char = Elm.Char.make(_elm),
+   $Native$Keyboard = Elm.Native.Keyboard.make(_elm),
+   $Set = Elm.Set.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var presses = A2($Signal.map,function (_) {    return _.keyCode;},$Native$Keyboard.presses);
+   var toXY = F2(function (_p0,keyCodes) {
+      var _p1 = _p0;
+      var is = function (keyCode) {    return A2($Set.member,keyCode,keyCodes) ? 1 : 0;};
+      return {x: is(_p1.right) - is(_p1.left),y: is(_p1.up) - is(_p1.down)};
+   });
+   var Directions = F4(function (a,b,c,d) {    return {up: a,down: b,left: c,right: d};});
+   var dropMap = F2(function (f,signal) {    return $Signal.dropRepeats(A2($Signal.map,f,signal));});
+   var EventInfo = F3(function (a,b,c) {    return {alt: a,meta: b,keyCode: c};});
+   var Blur = {ctor: "Blur"};
+   var Down = function (a) {    return {ctor: "Down",_0: a};};
+   var Up = function (a) {    return {ctor: "Up",_0: a};};
+   var rawEvents = $Signal.mergeMany(_U.list([A2($Signal.map,Up,$Native$Keyboard.ups)
+                                             ,A2($Signal.map,Down,$Native$Keyboard.downs)
+                                             ,A2($Signal.map,$Basics.always(Blur),$Native$Keyboard.blurs)]));
+   var empty = {alt: false,meta: false,keyCodes: $Set.empty};
+   var update = F2(function (event,model) {
+      var _p2 = event;
+      switch (_p2.ctor)
+      {case "Down": var _p3 = _p2._0;
+           return {alt: _p3.alt,meta: _p3.meta,keyCodes: A2($Set.insert,_p3.keyCode,model.keyCodes)};
+         case "Up": var _p4 = _p2._0;
+           return {alt: _p4.alt,meta: _p4.meta,keyCodes: A2($Set.remove,_p4.keyCode,model.keyCodes)};
+         default: return empty;}
+   });
+   var model = A3($Signal.foldp,update,empty,rawEvents);
+   var alt = A2(dropMap,function (_) {    return _.alt;},model);
+   var meta = A2(dropMap,function (_) {    return _.meta;},model);
+   var keysDown = A2(dropMap,function (_) {    return _.keyCodes;},model);
+   var arrows = A2(dropMap,toXY({up: 38,down: 40,left: 37,right: 39}),keysDown);
+   var wasd = A2(dropMap,toXY({up: 87,down: 83,left: 65,right: 68}),keysDown);
+   var isDown = function (keyCode) {    return A2(dropMap,$Set.member(keyCode),keysDown);};
+   var ctrl = isDown(17);
+   var shift = isDown(16);
+   var space = isDown(32);
+   var enter = isDown(13);
+   var Model = F3(function (a,b,c) {    return {alt: a,meta: b,keyCodes: c};});
+   return _elm.Keyboard.values = {_op: _op
+                                 ,arrows: arrows
+                                 ,wasd: wasd
+                                 ,enter: enter
+                                 ,space: space
+                                 ,ctrl: ctrl
+                                 ,shift: shift
+                                 ,alt: alt
+                                 ,meta: meta
+                                 ,isDown: isDown
+                                 ,keysDown: keysDown
+                                 ,presses: presses};
 };Elm.Feed = Elm.Feed || {};
 Elm.Feed.make = function (_elm) {
    "use strict";
@@ -10722,6 +10879,7 @@ Elm.Feed.make = function (_elm) {
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
    $Item = Elm.Item.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
@@ -10729,9 +10887,89 @@ Elm.Feed.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Static = Elm.Static.make(_elm);
    var _op = {};
-   var monthToInt = function (month) {
-      var _p0 = month;
+   var footerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "100%"}
+                                                    ,{ctor: "_Tuple2",_0: "position",_1: "fixed"}
+                                                    ,{ctor: "_Tuple2",_0: "bottom",_1: "0"}]));
+   var inputStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "30%"}
+                                                   ,{ctor: "_Tuple2",_0: "height",_1: "40px"}
+                                                   ,{ctor: "_Tuple2",_0: "padding",_1: "10px 0"}
+                                                   ,{ctor: "_Tuple2",_0: "font-size",_1: "2em"}
+                                                   ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                   ,{ctor: "_Tuple2",_0: "align-items",_1: "baseline"}
+                                                   ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}]));
+   var headerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "40px"}
+                                                    ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                    ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                    ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                    ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
+                                                    ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                    ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
+   var remindMe = $Signal.mailbox("");
+   var update = F2(function (action,model) {
+      var _p0 = action;
       switch (_p0.ctor)
+      {case "NoOp": return model;
+         case "Remove": var _p5 = _p0._0;
+           return _U.update(model,
+           {todo: A2($List.filter,function (_p1) {    var _p2 = _p1;return !_U.eq(_p2._0,_p5);},model.todo)
+           ,done: A2($List.filter,function (_p3) {    var _p4 = _p3;return !_U.eq(_p4._0,_p5);},model.done)});
+         case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
+         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
+         case "Modify": var _p16 = _p0._2;
+           var _p15 = _p0._1;
+           var _p14 = _p0._0;
+           if (_U.eq(_p16,$Item.Done)) return _p15.done ? _U.update(model,
+              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p14,_1: A2($Item.update,_p16,_p15)}]))
+              ,done: A2($List.filter,function (_p6) {    var _p7 = _p6;return !_U.eq(_p7._0,_p14);},model.done)}) : _U.update(model,
+              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p14,_1: A2($Item.update,_p16,_p15)}]))
+              ,todo: A2($List.filter,function (_p8) {    var _p9 = _p8;return !_U.eq(_p9._0,_p14);},model.todo)}); else {
+                 var updateItem = function (_p10) {
+                    var _p11 = _p10;
+                    var _p13 = _p11._1;
+                    var _p12 = _p11._0;
+                    return _U.eq(_p12,_p14) ? {ctor: "_Tuple2",_0: _p12,_1: A2($Item.update,_p16,_p13)} : {ctor: "_Tuple2",_0: _p12,_1: _p13};
+                 };
+                 return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
+              }
+         case "AlterSort": return model;
+         case "Hide": return _U.update(model,{input: $Basics.not(model.input)});
+         case "ReadInput": return _U.update(model,
+           {todo: A2($Basics._op["++"],
+           model.todo,
+           _U.list([{ctor: "_Tuple2"
+                    ,_0: model.todoID + 1
+                    ,_1: A4($Item.init,
+                    false,
+                    false,
+                    model.currentReminder,
+                    _U.list([{ctor: "_Tuple2",_0: "body",_1: model.currentReminder},{ctor: "_Tuple2",_0: "created",_1: model.currentDate}]))}]))
+           ,todoID: model.todoID + 1});
+         case "ReminderBody": return _U.update(model,{currentReminder: _p0._0});
+         default: return _U.update(model,{currentDate: _p0._0});}
+   });
+   var ReminderDate = function (a) {    return {ctor: "ReminderDate",_0: a};};
+   var ReminderBody = function (a) {    return {ctor: "ReminderBody",_0: a};};
+   var ReadInput = {ctor: "ReadInput"};
+   var Hide = {ctor: "Hide"};
+   var AlterSort = {ctor: "AlterSort"};
+   var Modify = F3(function (a,b,c) {    return {ctor: "Modify",_0: a,_1: b,_2: c};});
+   var viewItem = F2(function (address,_p17) {
+      var _p18 = _p17;
+      var _p19 = _p18._1;
+      return A2($Item.view,A2($Signal.forwardTo,address,A2(Modify,_p18._0,_p19)),_p19);
+   });
+   var Remove = function (a) {    return {ctor: "Remove",_0: a};};
+   var Next = {ctor: "Next"};
+   var Previous = {ctor: "Previous"};
+   var NoOp = {ctor: "NoOp"};
+   var actions = $Signal.mailbox(NoOp);
+   var monthToInt = function (month) {
+      var _p20 = month;
+      switch (_p20.ctor)
       {case "Jan": return 1;
          case "Feb": return 2;
          case "Mar": return 3;
@@ -10745,53 +10983,6 @@ Elm.Feed.make = function (_elm) {
          case "Nov": return 11;
          default: return 12;}
    };
-   var headerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "40px"}
-                                                    ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
-                                                    ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
-                                                    ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
-                                                    ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
-                                                    ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
-                                                    ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
-   var update = F2(function (action,model) {
-      var _p1 = action;
-      switch (_p1.ctor)
-      {case "Add": return _U.update(model,
-           {todo: A2($List._op["::"],{ctor: "_Tuple2",_0: model.todoID,_1: A4($Item.init,_p1._0,_p1._1,_p1._2,_p1._3)},model.todo),todoID: model.todoID + 1});
-         case "Remove": var _p6 = _p1._0;
-           return _U.update(model,
-           {todo: A2($List.filter,function (_p2) {    var _p3 = _p2;return !_U.eq(_p3._0,_p6);},model.todo)
-           ,done: A2($List.filter,function (_p4) {    var _p5 = _p4;return !_U.eq(_p5._0,_p6);},model.done)});
-         case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
-         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
-         case "Modify": var _p17 = _p1._2;
-           var _p16 = _p1._1;
-           var _p15 = _p1._0;
-           if (_U.eq(_p17,$Item.Done)) return _p16.done ? _U.update(model,
-              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p15,_1: A2($Item.update,_p17,_p16)}]))
-              ,done: A2($List.filter,function (_p7) {    var _p8 = _p7;return !_U.eq(_p8._0,_p15);},model.done)}) : _U.update(model,
-              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p15,_1: A2($Item.update,_p17,_p16)}]))
-              ,todo: A2($List.filter,function (_p9) {    var _p10 = _p9;return !_U.eq(_p10._0,_p15);},model.todo)}); else {
-                 var updateItem = function (_p11) {
-                    var _p12 = _p11;
-                    var _p14 = _p12._1;
-                    var _p13 = _p12._0;
-                    return _U.eq(_p13,_p15) ? {ctor: "_Tuple2",_0: _p13,_1: A2($Item.update,_p17,_p14)} : {ctor: "_Tuple2",_0: _p13,_1: _p14};
-                 };
-                 return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
-              }
-         default: return model;}
-   });
-   var AlterSort = {ctor: "AlterSort"};
-   var Modify = F3(function (a,b,c) {    return {ctor: "Modify",_0: a,_1: b,_2: c};});
-   var viewItem = F2(function (address,_p18) {
-      var _p19 = _p18;
-      var _p20 = _p19._1;
-      return A2($Item.view,A2($Signal.forwardTo,address,A2(Modify,_p19._0,_p20)),_p20);
-   });
-   var Remove = function (a) {    return {ctor: "Remove",_0: a};};
-   var Add = F4(function (a,b,c,d) {    return {ctor: "Add",_0: a,_1: b,_2: c,_3: d};});
-   var Next = {ctor: "Next"};
-   var Previous = {ctor: "Previous"};
    var dateComparison = F2(function (a,b) {
       return _U.eq($Date.year(a),$Date.year(b)) ? _U.eq(monthToInt($Date.month(a)),monthToInt($Date.month(b))) ? _U.eq($Date.day(a),
       $Date.day(b)) ? $Basics.EQ : _U.cmp($Date.day(a),$Date.day(b)) > 0 ? $Basics.GT : $Basics.LT : _U.cmp(monthToInt($Date.month(a)),
@@ -10809,7 +11000,26 @@ Elm.Feed.make = function (_elm) {
    var view = F2(function (address,model) {
       return A2($Html.div,
       _U.list([]),
-      _U.list([A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
+      _U.list([model.input ? A2($Html.div,
+              _U.list([footerStyle]),
+              _U.list([A2($Html.input,
+                      _U.list([$Html$Attributes.type$("text")
+                              ,$Html$Attributes.name("want")
+                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p27) {    return A2($Signal.message,address,ReminderBody(_p27));})
+                              ,$Html$Attributes.placeholder("What needs to get done ?")
+                              ,inputStyle]),
+                      _U.list([]))
+                      ,A2($Html.input,
+                      _U.list([$Html$Attributes.type$("date")
+                              ,$Html$Attributes.name("when")
+                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p28) {    return A2($Signal.message,address,ReminderDate(_p28));})
+                              ,inputStyle]),
+                      _U.list([]))
+                      ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,ReadInput)]),_U.list([$Html.text("add")]))
+                      ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,Hide)]),_U.list([$Html.text("hide")]))])) : A2($Html.div,
+              _U.list([footerStyle]),
+              _U.list([A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,Hide)]),_U.list([$Html.text("show")]))]))
+              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
               ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.todo)))
               ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
               ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done)))]));
@@ -10820,8 +11030,10 @@ Elm.Feed.make = function (_elm) {
    F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),
    _U.list([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]),
    A2($List.append,A2($List.map,bulk_init_reminder,$Static.reminders),A2($List.map,bulk_init_email,$Static.emails)));
-   var Model = F6(function (a,b,c,d,e,f) {    return {focus: a,len: b,todo: c,done: d,todoID: e,doneID: f};});
-   var init = function () {    var wut = initialize;return A6(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),0);}();
+   var Model = F8(function (a,b,c,d,e,f,g,h) {    return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,currentReminder: g,currentDate: h};});
+   var init = function () {    var wut = initialize;return A8(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),true,"","");}();
+   var initialModel = init;
+   var model = A3($Signal.foldp,update,initialModel,actions.signal);
    return _elm.Feed.values = {_op: _op
                              ,Model: Model
                              ,init: init
@@ -10830,49 +11042,27 @@ Elm.Feed.make = function (_elm) {
                              ,bulk_init_email: bulk_init_email
                              ,customComparison: customComparison
                              ,dateComparison: dateComparison
+                             ,monthToInt: monthToInt
+                             ,NoOp: NoOp
                              ,Previous: Previous
                              ,Next: Next
-                             ,Add: Add
                              ,Remove: Remove
                              ,Modify: Modify
                              ,AlterSort: AlterSort
+                             ,Hide: Hide
+                             ,ReadInput: ReadInput
+                             ,ReminderBody: ReminderBody
+                             ,ReminderDate: ReminderDate
                              ,update: update
                              ,view: view
+                             ,remindMe: remindMe
                              ,viewItem: viewItem
+                             ,actions: actions
+                             ,model: model
+                             ,initialModel: initialModel
                              ,headerStyle: headerStyle
-                             ,monthToInt: monthToInt};
-};Elm.StartApp = Elm.StartApp || {};
-Elm.StartApp.Simple = Elm.StartApp.Simple || {};
-Elm.StartApp.Simple.make = function (_elm) {
-   "use strict";
-   _elm.StartApp = _elm.StartApp || {};
-   _elm.StartApp.Simple = _elm.StartApp.Simple || {};
-   if (_elm.StartApp.Simple.values) return _elm.StartApp.Simple.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var start = function (config) {
-      var update = F2(function (maybeAction,model) {
-         var _p0 = maybeAction;
-         if (_p0.ctor === "Just") {
-               return A2(config.update,_p0._0,model);
-            } else {
-               return _U.crashCase("StartApp.Simple",{start: {line: 91,column: 7},end: {line: 96,column: 52}},_p0)("This should never happen.");
-            }
-      });
-      var actions = $Signal.mailbox($Maybe.Nothing);
-      var address = A2($Signal.forwardTo,actions.address,$Maybe.Just);
-      var model = A3($Signal.foldp,update,config.model,actions.signal);
-      return A2($Signal.map,config.view(address),model);
-   };
-   var Config = F3(function (a,b,c) {    return {model: a,view: b,update: c};});
-   return _elm.StartApp.Simple.values = {_op: _op,Config: Config,start: start};
+                             ,inputStyle: inputStyle
+                             ,footerStyle: footerStyle};
 };Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm) {
    "use strict";
@@ -10885,9 +11075,8 @@ Elm.Main.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
+   $Signal = Elm.Signal.make(_elm);
    var _op = {};
-   var main = $StartApp$Simple.start({model: $Feed.init,update: $Feed.update,view: $Feed.view});
+   var main = A2($Signal.map,$Feed.view($Feed.actions.address),$Feed.model);
    return _elm.Main.values = {_op: _op,main: main};
 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>

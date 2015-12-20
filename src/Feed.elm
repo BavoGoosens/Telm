@@ -6,6 +6,8 @@ import Date exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Keyboard
+import Set
 
 -- MODEL
 
@@ -15,17 +17,20 @@ type alias Model =
   , todo: List ( ID, Item.Model )
   , done: List ( ID, Item.Model )
   , todoID: ID
-  , doneID: ID
+  , input: Bool
+  , currentReminder: String
+  , currentDate: String
   }
 
 type alias ID = Int
 
+-- Init stuff
 init : Model
 init =
   let wut =
         initialize
   in
-        Model 0 (List.length wut) wut [] (List.length wut) 0
+        Model 0 (List.length wut) wut [] (List.length wut) True "" ""
 
 initialize: List ( ID, Item.Model)
 initialize =
@@ -37,7 +42,7 @@ bulk_init_reminder record =
 bulk_init_email record =
       Item.init False False record.body (get_other_email_attributes record)
 
-
+-- Sort functionality + helpers for the sort functionality
 customComparison: (ID, Item.Model) -> (ID, Item.Model) -> Order
 customComparison (a, b) (c, d) =
   if b.pinned && not d.pinned then
@@ -69,24 +74,42 @@ dateComparison a b =
       GT
     else
       LT
+
+monthToInt: Month -> Int
+monthToInt month =
+  case month of
+    Jan -> 1
+    Feb -> 2
+    Mar -> 3
+    Apr -> 4
+    May -> 5
+    Jun -> 6
+    Jul -> 7
+    Aug -> 8
+    Sep -> 9
+    Oct -> 10
+    Nov -> 11
+    Dec -> 12
+
+
 -- UPDATE
 
 type Action
-    = Previous
+    = NoOp
+    |Previous
     | Next
-    | Add Bool Bool String (List (String, String))
     | Remove ID
     | Modify ID Item.Model Item.Action
     | AlterSort
+    | Hide
+    | ReadInput
+    | ReminderBody String
+    | ReminderDate String
 
 update : Action -> Model -> Model
 update action model =
   case action of
-    Add done pinned body params ->
-      { model |
-        todo = (model.todoID, Item.init done pinned body params) :: model.todo,
-        todoID = model.todoID + 1
-      }
+    NoOp -> model
     Remove id ->
       { model |
         todo = List.filter (\(itemID, _) -> itemID /= id) model.todo,
@@ -121,21 +144,66 @@ update action model =
         in
             { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
     AlterSort -> model
+    Hide -> {model | input = not model.input}
+    ReadInput -> {model |
+                    todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder [("body", model.currentReminder), ("created", model.currentDate)] )],
+                    todoID = model.todoID + 1
+                  }
+    ReminderBody reminder -> {model | currentReminder = reminder}
+    ReminderDate date -> {model | currentDate = date}
+
 
 -- VIEW
 
 view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
-    h1 [headerStyle] [text "Todo "]
+    if model.input then
+      div [footerStyle] [
+        input [
+          type' "text"
+        , name "want"
+        , on "input" targetValue (Signal.message address << ReminderBody)
+        , placeholder "What needs to get done ?"
+        , inputStyle
+        ][]
+        ,input [
+        type' "date"
+        , name "when"
+        , on "input" targetValue (Signal.message address << ReminderDate)
+        , inputStyle
+        ][]
+        , button [inputStyle, onClick address ReadInput] [text "add"]
+        , button [inputStyle, onClick address Hide] [text "hide"]
+      ]
+    else
+      div [footerStyle] [button [inputStyle, onClick address Hide] [text "show"]]
+    , h1 [headerStyle] [text "Todo "]
     , div [] (List.map (viewItem address) (List.sortWith customComparison model.todo))
     , h1 [headerStyle] [text "Done "]
     , div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
     ]
 
+remindMe : Signal.Mailbox String
+remindMe =
+  Signal.mailbox ""
+
 viewItem : Signal.Address Action -> (ID, Item.Model) -> Html
 viewItem address (id, model) =
   Item.view (Signal.forwardTo address (Modify id model)) model
+
+actions : Signal.Mailbox Action
+actions =
+  Signal.mailbox NoOp
+
+model : Signal Model
+model =
+  Signal.foldp update initialModel actions.signal
+
+initialModel : Model
+initialModel =
+  init
+-- Style details
 
 headerStyle : Attribute
 headerStyle =
@@ -151,19 +219,26 @@ headerStyle =
     , ("margin-right", "auto")
     ]
 
--- Helper
-monthToInt: Month -> Int
-monthToInt month =
-  case month of
-    Jan -> 1
-    Feb -> 2
-    Mar -> 3
-    Apr -> 4
-    May -> 5
-    Jun -> 6
-    Jul -> 7
-    Aug -> 8
-    Sep -> 9
-    Oct -> 10
-    Nov -> 11
-    Dec -> 12
+inputStyle : Attribute
+inputStyle =
+    style
+        [ ("width", "30%")
+        , ("height", "40px")
+        , ("padding", "10px 0")
+        , ("font-size", "2em")
+        , ("font-family", "monospace")
+        , ("text-align", "center")
+        , ("margin-left", "auto")
+        , ("margin-right", "auto")
+        , ("display", "flex")
+        , ("align-items", "baseline")
+        , ("justify-content", "center")
+        ]
+
+footerStyle : Attribute
+footerStyle =
+    style
+        [ ("width", "100%")
+        , ("position", "fixed")
+        , ("bottom", "0")
+        ]

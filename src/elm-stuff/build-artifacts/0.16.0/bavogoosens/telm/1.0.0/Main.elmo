@@ -10,9 +10,8 @@ Elm.Main.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
+   $Signal = Elm.Signal.make(_elm);
    var _op = {};
-   var main = $StartApp$Simple.start({model: $Feed.init,update: $Feed.update,view: $Feed.view});
+   var main = A2($Signal.map,$Feed.view($Feed.actions.address),$Feed.model);
    return _elm.Main.values = {_op: _op,main: main};
 };

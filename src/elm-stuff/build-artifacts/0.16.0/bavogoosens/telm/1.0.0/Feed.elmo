@@ -9,6 +9,7 @@ Elm.Feed.make = function (_elm) {
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
    $Item = Elm.Item.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
@@ -16,9 +17,89 @@ Elm.Feed.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Static = Elm.Static.make(_elm);
    var _op = {};
-   var monthToInt = function (month) {
-      var _p0 = month;
+   var footerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "100%"}
+                                                    ,{ctor: "_Tuple2",_0: "position",_1: "fixed"}
+                                                    ,{ctor: "_Tuple2",_0: "bottom",_1: "0"}]));
+   var inputStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "width",_1: "30%"}
+                                                   ,{ctor: "_Tuple2",_0: "height",_1: "40px"}
+                                                   ,{ctor: "_Tuple2",_0: "padding",_1: "10px 0"}
+                                                   ,{ctor: "_Tuple2",_0: "font-size",_1: "2em"}
+                                                   ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                   ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                   ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                   ,{ctor: "_Tuple2",_0: "align-items",_1: "baseline"}
+                                                   ,{ctor: "_Tuple2",_0: "justify-content",_1: "center"}]));
+   var headerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "40px"}
+                                                    ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
+                                                    ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
+                                                    ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
+                                                    ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
+                                                    ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                    ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
+   var remindMe = $Signal.mailbox("");
+   var update = F2(function (action,model) {
+      var _p0 = action;
       switch (_p0.ctor)
+      {case "NoOp": return model;
+         case "Remove": var _p5 = _p0._0;
+           return _U.update(model,
+           {todo: A2($List.filter,function (_p1) {    var _p2 = _p1;return !_U.eq(_p2._0,_p5);},model.todo)
+           ,done: A2($List.filter,function (_p3) {    var _p4 = _p3;return !_U.eq(_p4._0,_p5);},model.done)});
+         case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
+         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
+         case "Modify": var _p16 = _p0._2;
+           var _p15 = _p0._1;
+           var _p14 = _p0._0;
+           if (_U.eq(_p16,$Item.Done)) return _p15.done ? _U.update(model,
+              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p14,_1: A2($Item.update,_p16,_p15)}]))
+              ,done: A2($List.filter,function (_p6) {    var _p7 = _p6;return !_U.eq(_p7._0,_p14);},model.done)}) : _U.update(model,
+              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p14,_1: A2($Item.update,_p16,_p15)}]))
+              ,todo: A2($List.filter,function (_p8) {    var _p9 = _p8;return !_U.eq(_p9._0,_p14);},model.todo)}); else {
+                 var updateItem = function (_p10) {
+                    var _p11 = _p10;
+                    var _p13 = _p11._1;
+                    var _p12 = _p11._0;
+                    return _U.eq(_p12,_p14) ? {ctor: "_Tuple2",_0: _p12,_1: A2($Item.update,_p16,_p13)} : {ctor: "_Tuple2",_0: _p12,_1: _p13};
+                 };
+                 return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
+              }
+         case "AlterSort": return model;
+         case "Hide": return _U.update(model,{input: $Basics.not(model.input)});
+         case "ReadInput": return _U.update(model,
+           {todo: A2($Basics._op["++"],
+           model.todo,
+           _U.list([{ctor: "_Tuple2"
+                    ,_0: model.todoID + 1
+                    ,_1: A4($Item.init,
+                    false,
+                    false,
+                    model.currentReminder,
+                    _U.list([{ctor: "_Tuple2",_0: "body",_1: model.currentReminder},{ctor: "_Tuple2",_0: "created",_1: model.currentDate}]))}]))
+           ,todoID: model.todoID + 1});
+         case "ReminderBody": return _U.update(model,{currentReminder: _p0._0});
+         default: return _U.update(model,{currentDate: _p0._0});}
+   });
+   var ReminderDate = function (a) {    return {ctor: "ReminderDate",_0: a};};
+   var ReminderBody = function (a) {    return {ctor: "ReminderBody",_0: a};};
+   var ReadInput = {ctor: "ReadInput"};
+   var Hide = {ctor: "Hide"};
+   var AlterSort = {ctor: "AlterSort"};
+   var Modify = F3(function (a,b,c) {    return {ctor: "Modify",_0: a,_1: b,_2: c};});
+   var viewItem = F2(function (address,_p17) {
+      var _p18 = _p17;
+      var _p19 = _p18._1;
+      return A2($Item.view,A2($Signal.forwardTo,address,A2(Modify,_p18._0,_p19)),_p19);
+   });
+   var Remove = function (a) {    return {ctor: "Remove",_0: a};};
+   var Next = {ctor: "Next"};
+   var Previous = {ctor: "Previous"};
+   var NoOp = {ctor: "NoOp"};
+   var actions = $Signal.mailbox(NoOp);
+   var monthToInt = function (month) {
+      var _p20 = month;
+      switch (_p20.ctor)
       {case "Jan": return 1;
          case "Feb": return 2;
          case "Mar": return 3;
@@ -32,53 +113,6 @@ Elm.Feed.make = function (_elm) {
          case "Nov": return 11;
          default: return 12;}
    };
-   var headerStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "font-size",_1: "40px"}
-                                                    ,{ctor: "_Tuple2",_0: "font-family",_1: "monospace"}
-                                                    ,{ctor: "_Tuple2",_0: "display",_1: "flex"}
-                                                    ,{ctor: "_Tuple2",_0: "width",_1: "60%"}
-                                                    ,{ctor: "_Tuple2",_0: "text-align",_1: "left"}
-                                                    ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
-                                                    ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}]));
-   var update = F2(function (action,model) {
-      var _p1 = action;
-      switch (_p1.ctor)
-      {case "Add": return _U.update(model,
-           {todo: A2($List._op["::"],{ctor: "_Tuple2",_0: model.todoID,_1: A4($Item.init,_p1._0,_p1._1,_p1._2,_p1._3)},model.todo),todoID: model.todoID + 1});
-         case "Remove": var _p6 = _p1._0;
-           return _U.update(model,
-           {todo: A2($List.filter,function (_p2) {    var _p3 = _p2;return !_U.eq(_p3._0,_p6);},model.todo)
-           ,done: A2($List.filter,function (_p4) {    var _p5 = _p4;return !_U.eq(_p5._0,_p6);},model.done)});
-         case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
-         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
-         case "Modify": var _p17 = _p1._2;
-           var _p16 = _p1._1;
-           var _p15 = _p1._0;
-           if (_U.eq(_p17,$Item.Done)) return _p16.done ? _U.update(model,
-              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p15,_1: A2($Item.update,_p17,_p16)}]))
-              ,done: A2($List.filter,function (_p7) {    var _p8 = _p7;return !_U.eq(_p8._0,_p15);},model.done)}) : _U.update(model,
-              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p15,_1: A2($Item.update,_p17,_p16)}]))
-              ,todo: A2($List.filter,function (_p9) {    var _p10 = _p9;return !_U.eq(_p10._0,_p15);},model.todo)}); else {
-                 var updateItem = function (_p11) {
-                    var _p12 = _p11;
-                    var _p14 = _p12._1;
-                    var _p13 = _p12._0;
-                    return _U.eq(_p13,_p15) ? {ctor: "_Tuple2",_0: _p13,_1: A2($Item.update,_p17,_p14)} : {ctor: "_Tuple2",_0: _p13,_1: _p14};
-                 };
-                 return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
-              }
-         default: return model;}
-   });
-   var AlterSort = {ctor: "AlterSort"};
-   var Modify = F3(function (a,b,c) {    return {ctor: "Modify",_0: a,_1: b,_2: c};});
-   var viewItem = F2(function (address,_p18) {
-      var _p19 = _p18;
-      var _p20 = _p19._1;
-      return A2($Item.view,A2($Signal.forwardTo,address,A2(Modify,_p19._0,_p20)),_p20);
-   });
-   var Remove = function (a) {    return {ctor: "Remove",_0: a};};
-   var Add = F4(function (a,b,c,d) {    return {ctor: "Add",_0: a,_1: b,_2: c,_3: d};});
-   var Next = {ctor: "Next"};
-   var Previous = {ctor: "Previous"};
    var dateComparison = F2(function (a,b) {
       return _U.eq($Date.year(a),$Date.year(b)) ? _U.eq(monthToInt($Date.month(a)),monthToInt($Date.month(b))) ? _U.eq($Date.day(a),
       $Date.day(b)) ? $Basics.EQ : _U.cmp($Date.day(a),$Date.day(b)) > 0 ? $Basics.GT : $Basics.LT : _U.cmp(monthToInt($Date.month(a)),
@@ -96,7 +130,26 @@ Elm.Feed.make = function (_elm) {
    var view = F2(function (address,model) {
       return A2($Html.div,
       _U.list([]),
-      _U.list([A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
+      _U.list([model.input ? A2($Html.div,
+              _U.list([footerStyle]),
+              _U.list([A2($Html.input,
+                      _U.list([$Html$Attributes.type$("text")
+                              ,$Html$Attributes.name("want")
+                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p27) {    return A2($Signal.message,address,ReminderBody(_p27));})
+                              ,$Html$Attributes.placeholder("What needs to get done ?")
+                              ,inputStyle]),
+                      _U.list([]))
+                      ,A2($Html.input,
+                      _U.list([$Html$Attributes.type$("date")
+                              ,$Html$Attributes.name("when")
+                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p28) {    return A2($Signal.message,address,ReminderDate(_p28));})
+                              ,inputStyle]),
+                      _U.list([]))
+                      ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,ReadInput)]),_U.list([$Html.text("add")]))
+                      ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,Hide)]),_U.list([$Html.text("hide")]))])) : A2($Html.div,
+              _U.list([footerStyle]),
+              _U.list([A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,Hide)]),_U.list([$Html.text("show")]))]))
+              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
               ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.todo)))
               ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
               ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done)))]));
@@ -107,8 +160,10 @@ Elm.Feed.make = function (_elm) {
    F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),
    _U.list([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]),
    A2($List.append,A2($List.map,bulk_init_reminder,$Static.reminders),A2($List.map,bulk_init_email,$Static.emails)));
-   var Model = F6(function (a,b,c,d,e,f) {    return {focus: a,len: b,todo: c,done: d,todoID: e,doneID: f};});
-   var init = function () {    var wut = initialize;return A6(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),0);}();
+   var Model = F8(function (a,b,c,d,e,f,g,h) {    return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,currentReminder: g,currentDate: h};});
+   var init = function () {    var wut = initialize;return A8(Model,0,$List.length(wut),wut,_U.list([]),$List.length(wut),true,"","");}();
+   var initialModel = init;
+   var model = A3($Signal.foldp,update,initialModel,actions.signal);
    return _elm.Feed.values = {_op: _op
                              ,Model: Model
                              ,init: init
@@ -117,15 +172,25 @@ Elm.Feed.make = function (_elm) {
                              ,bulk_init_email: bulk_init_email
                              ,customComparison: customComparison
                              ,dateComparison: dateComparison
+                             ,monthToInt: monthToInt
+                             ,NoOp: NoOp
                              ,Previous: Previous
                              ,Next: Next
-                             ,Add: Add
                              ,Remove: Remove
                              ,Modify: Modify
                              ,AlterSort: AlterSort
+                             ,Hide: Hide
+                             ,ReadInput: ReadInput
+                             ,ReminderBody: ReminderBody
+                             ,ReminderDate: ReminderDate
                              ,update: update
                              ,view: view
+                             ,remindMe: remindMe
                              ,viewItem: viewItem
+                             ,actions: actions
+                             ,model: model
+                             ,initialModel: initialModel
                              ,headerStyle: headerStyle
-                             ,monthToInt: monthToInt};
+                             ,inputStyle: inputStyle
+                             ,footerStyle: footerStyle};
 };
