@@ -20,7 +20,7 @@ type alias Model =
   , done: List ( ID, Item.Model )
   , todoID: ID
   , input: Bool
-  , showTodo: Bool
+  , showDone: Bool
   , currentReminder: String
   , currentDate: String
   , reverseSort: Bool
@@ -56,6 +56,16 @@ customComparison (a, b) (c, d) =
       GT
     else
       dateComparison b.order d.order
+
+reversedComparison: (ID, Item.Model) -> (ID, Item.Model) -> Order
+reversedComparison (a, b) (c, d) =
+  if dateComparison b.order d.order == LT then
+    GT
+  else
+    if dateComparison b.order d.order == GT then
+      LT
+    else
+      EQ
 
 dateComparison: Date -> Date -> Order
 dateComparison a b =
@@ -117,7 +127,7 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp -> model
+    NoOp -> {model | reverseSort = False}
     Remove id ->
       { model |
         todo = List.filter (\(itemID, _) -> itemID /= id) model.todo,
@@ -130,7 +140,10 @@ update action model =
     Previous -> if model.focus > 0 then
                   {model | focus = model.focus - 1}
                 else
-                  {model | focus = model.len}
+                  if model.showDone then
+                    {model | focus = model.len}
+                  else
+                    {model | focus = List.length model.todo}
     Modify id item itemAction ->
       if itemAction == Done then
             if item.done then
@@ -151,9 +164,9 @@ update action model =
                   else (itemID, itemModel)
         in
             { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
-    AlterSort -> model
+    AlterSort -> {model | reverseSort = True}
     HideInput -> {model | input = not model.input}
-    HideTodo -> {model | showTodo = not model.showTodo }
+    HideTodo -> {model | showDone = not model.showDone }
     ReadInput -> {model |
                     todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder
                       [("body", model.currentReminder), ("created", model.currentDate)] )],
@@ -175,6 +188,7 @@ view address model =
       div [footerStyle] [
         input [
           type' "text"
+        , wrap "hard"
         , name "want"
         , on "input" targetValue (Signal.message address << ReminderBody)
         , placeholder "What needs to get done ?"
@@ -192,13 +206,20 @@ view address model =
     else
       div [footerStyle] [button [inputStyle, onClick address HideInput] [text "show"]]
     , h1 [headerStyle] [text "Todo "]
-    , div [] (List.map (viewItem address) (List.sortWith customComparison model.todo))
-    , h1 [headerStyle] [text "Done "]
-    , if model.showTodo then
-        div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
+    , div []
+      (if model.reverseSort then
+        (List.map (viewItem address) (List.sortWith reversedComparison model.todo))
       else
-        p [] []
-    -- , Signal.map display Keyboard.keysDown
+        (List.map (viewItem address) (List.sortWith customComparison model.todo))
+      )
+    , h1 [headerStyle] [text "Done "]
+    , if model.showDone then
+        if model.reverseSort then
+          div [] (List.map (viewItem address) (List.sortWith reversedComparison model.done))
+        else
+          div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
+      else
+        p [Item.bodyStyle] [text "Hidden alt+d to show"]
     ]
 
 display : Set.Set Int -> Html

@@ -10917,13 +10917,14 @@ Elm.Feed.make = function (_elm) {
    var update = F2(function (action,model) {
       var _p0 = action;
       switch (_p0.ctor)
-      {case "NoOp": return model;
+      {case "NoOp": return _U.update(model,{reverseSort: false});
          case "Remove": var _p5 = _p0._0;
            return _U.update(model,
            {todo: A2($List.filter,function (_p1) {    var _p2 = _p1;return !_U.eq(_p2._0,_p5);},model.todo)
            ,done: A2($List.filter,function (_p3) {    var _p4 = _p3;return !_U.eq(_p4._0,_p5);},model.done)});
          case "Next": return _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
-         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : _U.update(model,{focus: model.len});
+         case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : model.showDone ? _U.update(model,
+           {focus: model.len}) : _U.update(model,{focus: $List.length(model.todo)});
          case "Modify": var _p16 = _p0._2;
            var _p15 = _p0._1;
            var _p14 = _p0._0;
@@ -10940,9 +10941,9 @@ Elm.Feed.make = function (_elm) {
                  };
                  return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
               }
-         case "AlterSort": return model;
+         case "AlterSort": return _U.update(model,{reverseSort: true});
          case "HideInput": return _U.update(model,{input: $Basics.not(model.input)});
-         case "HideTodo": return _U.update(model,{showTodo: $Basics.not(model.showTodo)});
+         case "HideTodo": return _U.update(model,{showDone: $Basics.not(model.showDone)});
          case "ReadInput": return _U.update(model,
            {todo: A2($Basics._op["++"],
            model.todo,
@@ -11011,14 +11012,22 @@ Elm.Feed.make = function (_elm) {
       $Date.day(b)) ? $Basics.EQ : _U.cmp($Date.day(a),$Date.day(b)) > 0 ? $Basics.GT : $Basics.LT : _U.cmp(monthToInt($Date.month(a)),
       monthToInt($Date.month(b))) > 0 ? $Basics.GT : $Basics.LT : _U.cmp($Date.year(a),$Date.year(b)) > 0 ? $Basics.GT : $Basics.LT;
    });
-   var customComparison = F2(function (_p22,_p21) {
+   var reversedComparison = F2(function (_p22,_p21) {
       var _p23 = _p22;
       var _p26 = _p23._1;
       var _p24 = _p21;
       var _p25 = _p24._1;
-      return _p26.pinned && $Basics.not(_p25.pinned) ? $Basics.LT : $Basics.not(_p26.pinned) && _p25.pinned ? $Basics.GT : A2(dateComparison,
-      _p26.order,
-      _p25.order);
+      return _U.eq(A2(dateComparison,_p26.order,_p25.order),$Basics.LT) ? $Basics.GT : _U.eq(A2(dateComparison,_p26.order,_p25.order),
+      $Basics.GT) ? $Basics.LT : $Basics.EQ;
+   });
+   var customComparison = F2(function (_p28,_p27) {
+      var _p29 = _p28;
+      var _p32 = _p29._1;
+      var _p30 = _p27;
+      var _p31 = _p30._1;
+      return _p32.pinned && $Basics.not(_p31.pinned) ? $Basics.LT : $Basics.not(_p32.pinned) && _p31.pinned ? $Basics.GT : A2(dateComparison,
+      _p32.order,
+      _p31.order);
    });
    var view = F2(function (address,model) {
       return A2($Html.div,
@@ -11027,15 +11036,16 @@ Elm.Feed.make = function (_elm) {
               _U.list([footerStyle]),
               _U.list([A2($Html.input,
                       _U.list([$Html$Attributes.type$("text")
+                              ,$Html$Attributes.wrap("hard")
                               ,$Html$Attributes.name("want")
-                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p27) {    return A2($Signal.message,address,ReminderBody(_p27));})
+                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p33) {    return A2($Signal.message,address,ReminderBody(_p33));})
                               ,$Html$Attributes.placeholder("What needs to get done ?")
                               ,inputStyle]),
                       _U.list([]))
                       ,A2($Html.input,
                       _U.list([$Html$Attributes.type$("date")
                               ,$Html$Attributes.name("when")
-                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p28) {    return A2($Signal.message,address,ReminderDate(_p28));})
+                              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p34) {    return A2($Signal.message,address,ReminderDate(_p34));})
                               ,inputStyle]),
                       _U.list([]))
                       ,A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,ReadInput)]),_U.list([$Html.text("add")]))
@@ -11043,11 +11053,19 @@ Elm.Feed.make = function (_elm) {
               _U.list([footerStyle]),
               _U.list([A2($Html.button,_U.list([inputStyle,A2($Html$Events.onClick,address,HideInput)]),_U.list([$Html.text("show")]))]))
               ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Todo ")]))
-              ,A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.todo)))
-              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
-              ,model.showTodo ? A2($Html.div,_U.list([]),A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done))) : A2($Html.p,
+              ,A2($Html.div,
               _U.list([]),
-              _U.list([]))]));
+              model.reverseSort ? A2($List.map,viewItem(address),A2($List.sortWith,reversedComparison,model.todo)) : A2($List.map,
+              viewItem(address),
+              A2($List.sortWith,customComparison,model.todo)))
+              ,A2($Html.h1,_U.list([headerStyle]),_U.list([$Html.text("Done ")]))
+              ,model.showDone ? model.reverseSort ? A2($Html.div,
+              _U.list([]),
+              A2($List.map,viewItem(address),A2($List.sortWith,reversedComparison,model.done))) : A2($Html.div,
+              _U.list([]),
+              A2($List.map,viewItem(address),A2($List.sortWith,customComparison,model.done))) : A2($Html.p,
+              _U.list([$Item.bodyStyle]),
+              _U.list([$Html.text("Hidden alt+d to show")]))]));
    });
    var bulk_init_email = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_email_attributes(record));};
    var bulk_init_reminder = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_reminder_attributes(record));};
@@ -11065,7 +11083,7 @@ Elm.Feed.make = function (_elm) {
                         return function (h) {
                            return function (i) {
                               return function (j) {
-                                 return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,showTodo: g,currentReminder: h,currentDate: i,reverseSort: j};
+                                 return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,showDone: g,currentReminder: h,currentDate: i,reverseSort: j};
                               };
                            };
                         };
@@ -11086,6 +11104,7 @@ Elm.Feed.make = function (_elm) {
                              ,bulk_init_reminder: bulk_init_reminder
                              ,bulk_init_email: bulk_init_email
                              ,customComparison: customComparison
+                             ,reversedComparison: reversedComparison
                              ,dateComparison: dateComparison
                              ,monthToInt: monthToInt
                              ,NoOp: NoOp
