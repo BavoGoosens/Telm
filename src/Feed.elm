@@ -23,7 +23,7 @@ type alias Model =
   , showDone: Bool
   , currentReminder: String
   , currentDate: String
-  , reverseSort: Bool
+  , sortFunction: (ID, Item.Model) -> (ID, Item.Model) -> Order
   }
 
 type alias ID = Int
@@ -34,7 +34,7 @@ init =
   let wut =
         initialize
   in
-        Model 0 (List.length wut) wut [] (List.length wut) True True "" "" False
+        Model 0 (List.length wut) wut [] (List.length wut) True True "" "" customComparison
 
 initialize: List ( ID, Item.Model)
 initialize =
@@ -116,7 +116,7 @@ type Action
     | Modify ID Item.Model Item.Action
     | AlterSort
     | HideInput
-    | HideTodo
+    | HideDone
     | ReadInput
     | TruncateFocussed
     | PinFocussed
@@ -127,16 +127,23 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp -> {model | reverseSort = False}
+    NoOp -> {model | sortFunction = customComparison}
     Remove id ->
       { model |
         todo = List.filter (\(itemID, _) -> itemID /= id) model.todo,
-        done = List.filter (\(itemID, _) -> itemID /= id) model.done
+        done = List.filter (\(itemID, _) -> itemID /= id) model.done,
+        len = model.len - 1
       }
-    Next -> if model.focus < model.len then
-              {model | focus = model.focus + 1}
+    Next -> if model.showDone then
+              if model.focus < model.len then
+                {model | focus = model.focus + 1}
+              else
+                {model | focus = 0}
             else
-              {model | focus = 0}
+              if model.focus < List.length model.todo then
+                {model | focus = model.focus + 1}
+              else
+                {model | focus = 0}
     Previous -> if model.focus > 0 then
                   {model | focus = model.focus - 1}
                 else
@@ -164,9 +171,9 @@ update action model =
                   else (itemID, itemModel)
         in
             { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
-    AlterSort -> {model | reverseSort = True}
+    AlterSort -> {model | sortFunction = reversedComparison}
     HideInput -> {model | input = not model.input}
-    HideTodo -> {model | showDone = not model.showDone }
+    HideDone -> {model | showDone = not model.showDone }
     ReadInput -> {model |
                     todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder
                       [("body", model.currentReminder), ("created", model.currentDate)] )],
@@ -206,18 +213,10 @@ view address model =
     else
       div [footerStyle] [button [inputStyle, onClick address HideInput] [text "show"]]
     , h1 [headerStyle] [text "Todo "]
-    , div []
-      (if model.reverseSort then
-        (List.map (viewItem address) (List.sortWith reversedComparison model.todo))
-      else
-        (List.map (viewItem address) (List.sortWith customComparison model.todo))
-      )
+    , div [] (List.map (viewItem address) (List.sortWith model.sortFunction model.todo))
     , h1 [headerStyle] [text "Done "]
     , if model.showDone then
-        if model.reverseSort then
-          div [] (List.map (viewItem address) (List.sortWith reversedComparison model.done))
-        else
-          div [] (List.map (viewItem address) (List.sortWith customComparison model.done))
+        div [] (List.map (viewItem address) (List.sortWith model.sortFunction model.done))
       else
         p [Item.bodyStyle] [text "Hidden alt+d to show"]
     ]
@@ -272,7 +271,7 @@ parseKeyCode set =
                       HideInput
                     else
                       if List.member 68 lijst then
-                        HideTodo
+                        HideDone
                       else
                         NoOp
       else
