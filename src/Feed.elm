@@ -11,6 +11,7 @@ import Set
 import Char
 import Array
 import Maybe
+import Time
 
 
 -- MODEL
@@ -284,6 +285,7 @@ view address model =
         ,input [
           type' "date"
         , name "when"
+        , id "datepicker"
         , on "input" targetValue (Signal.message address << ReminderDate)
         , inputStyle
         ][]

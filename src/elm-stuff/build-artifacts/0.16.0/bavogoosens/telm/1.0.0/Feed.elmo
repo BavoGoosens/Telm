@@ -77,6 +77,7 @@ Elm.Feed.make = function (_elm) {
                       ,A2($Html.input,
                       _U.list([$Html$Attributes.type$("date")
                               ,$Html$Attributes.name("when")
+                              ,$Html$Attributes.id("datepicker")
                               ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p4) {    return A2($Signal.message,address,ReminderDate(_p4));})
                               ,inputStyle]),
                       _U.list([]))
