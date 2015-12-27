@@ -16,6 +16,12 @@ Elm.Item.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var inFocusKaderStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border-bottom",_1: "1px solid grey"}
+                                                          ,{ctor: "_Tuple2",_0: "border-left",_1: "2px solid lightblue"}
+                                                          ,{ctor: "_Tuple2",_0: "display",_1: "block-inline"}
+                                                          ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
+                                                          ,{ctor: "_Tuple2",_0: "margin-right",_1: "auto"}
+                                                          ,{ctor: "_Tuple2",_0: "width",_1: "60%"}]));
    var kaderStyle = $Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "border-bottom",_1: "1px solid grey"}
                                                    ,{ctor: "_Tuple2",_0: "display",_1: "block-inline"}
                                                    ,{ctor: "_Tuple2",_0: "margin-left",_1: "auto"}
@@ -88,16 +94,20 @@ Elm.Item.make = function (_elm) {
       switch (_p4.ctor)
       {case "Pin": return _U.update(model,{pinned: $Basics.not(model.pinned)});
          case "Done": return _U.update(model,{done: $Basics.not(model.done)});
-         default: return model.truncable && _U.cmp($String.length(model.displayedText),200) < 1 ? _U.update(model,
+         case "Truncate": return model.truncable && _U.cmp($String.length(model.displayedText),200) < 1 ? _U.update(model,
            {displayedText: model.body}) : model.truncable && _U.cmp($String.length(model.displayedText),200) > 0 ? _U.update(model,
-           {displayedText: A2($String.left,200,model.body)}) : model;}
+           {displayedText: A2($String.left,200,model.body)}) : model;
+         case "Focus": return _U.update(model,{infocus: true});
+         default: return _U.update(model,{infocus: false});}
    });
+   var Unfocus = {ctor: "Unfocus"};
+   var Focus = {ctor: "Focus"};
    var Done = {ctor: "Done"};
    var Truncate = {ctor: "Truncate"};
    var Pin = {ctor: "Pin"};
    var view = F2(function (address,model) {
       return model.truncable ? A2($Html.div,
-      _U.list([kaderStyle]),
+      _U.list([model.infocus ? inFocusKaderStyle : kaderStyle]),
       _U.list([prettyHTMLPrint(model)
               ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
               _U.list([pinnedBodyStyle]),
@@ -113,7 +123,7 @@ Elm.Item.make = function (_elm) {
                       ,A2($Html.button,
                       _U.list([A2($Html$Events.onClick,address,Truncate)]),
                       _U.list([_U.cmp($String.length(model.displayedText),200) > 0 ? $Html.text("less") : $Html.text("more")]))]))])) : A2($Html.div,
-      _U.list([kaderStyle]),
+      _U.list([model.infocus ? inFocusKaderStyle : kaderStyle]),
       _U.list([prettyHTMLPrint(model)
               ,model.pinned && $Basics.not(model.done) ? A2($Html.div,
               _U.list([pinnedBodyStyle]),
@@ -135,9 +145,9 @@ Elm.Item.make = function (_elm) {
       $Date.fromTime(0),
       $Date.fromString(A2($Maybe.withDefault,"",$List.head(A2($List.filter,function (a) {    return !_U.eq(a,"");},A2($List.map,isDateField,list))))));
    };
-   var Model = F7(function (a,b,c,d,e,f,g) {    return {done: a,pinned: b,truncable: c,displayedText: d,body: e,order: f,params: g};});
-   var init = F4(function (done,pinned,body,params) {
-      return A7(Model,done,pinned,_U.cmp($String.length(body),200) > 0,A2($String.left,200,body),body,extractDate(params),params);
+   var Model = F8(function (a,b,c,d,e,f,g,h) {    return {done: a,pinned: b,truncable: c,infocus: d,displayedText: e,body: f,order: g,params: h};});
+   var init = F5(function (done,pinned,focus,body,params) {
+      return A8(Model,done,pinned,_U.cmp($String.length(body),200) > 0,focus,A2($String.left,200,body),body,extractDate(params),params);
    });
    return _elm.Item.values = {_op: _op
                              ,Model: Model
@@ -146,6 +156,8 @@ Elm.Item.make = function (_elm) {
                              ,Pin: Pin
                              ,Truncate: Truncate
                              ,Done: Done
+                             ,Focus: Focus
+                             ,Unfocus: Unfocus
                              ,update: update
                              ,view: view
                              ,prettyHTMLPrint: prettyHTMLPrint
@@ -154,5 +166,6 @@ Elm.Item.make = function (_elm) {
                              ,pinnedBodyStyle: pinnedBodyStyle
                              ,pinnedDoneBodyStyle: pinnedDoneBodyStyle
                              ,doneBodyStyle: doneBodyStyle
-                             ,kaderStyle: kaderStyle};
+                             ,kaderStyle: kaderStyle
+                             ,inFocusKaderStyle: inFocusKaderStyle};
 };

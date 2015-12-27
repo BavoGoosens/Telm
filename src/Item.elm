@@ -13,6 +13,7 @@ type alias Model =
    { done: Bool
    , pinned: Bool
    , truncable: Bool
+   , infocus: Bool
    , displayedText: String
    , body: String
    , order: Date
@@ -20,8 +21,8 @@ type alias Model =
    }
 
 -- check if truncable
-init: Bool -> Bool -> String -> List (String, String)-> Model
-init done pinned body params = Model done pinned ((String.length body) > 200) (String.left 200 body) body (extractDate params) params
+init: Bool -> Bool -> Bool -> String -> List (String, String)-> Model
+init done pinned focus body params = Model done pinned ((String.length body) > 200) focus (String.left 200 body) body (extractDate params) params
 
 extractDate: List (String, String) -> Date
 extractDate list =
@@ -35,7 +36,7 @@ extractDate list =
 
 -- UPDATE
 
-type Action = Pin | Truncate | Done
+type Action = Pin | Truncate | Done | Focus | Unfocus
 
 update : Action -> Model -> Model
 update action model =
@@ -49,13 +50,15 @@ update action model =
                         {model | displayedText = (String.left 200 model.body)}
                     else
                         model
+    Focus -> {model | infocus = True}
+    Unfocus -> {model | infocus = False}
 
 -- VIEW
 
 view : Signal.Address Action -> Model -> Html
 view address model =
   if model.truncable then
-    div [kaderStyle]
+    div [if model.infocus then inFocusKaderStyle else kaderStyle]
       [ prettyHTMLPrint model
       , if model.pinned && not model.done then
           div [ pinnedBodyStyle ] [ text model.displayedText ]
@@ -71,7 +74,7 @@ view address model =
         ]
       ]
   else
-    div [kaderStyle]
+    div [if model.infocus then inFocusKaderStyle else kaderStyle]
       [ prettyHTMLPrint model
       , if model.pinned && not model.done then
           div [ pinnedBodyStyle ] [ text model.displayedText ]
@@ -175,6 +178,16 @@ kaderStyle : Attribute
 kaderStyle =
   style
     [ ("border-bottom" , "1px solid grey")
+    , ("display", "block-inline")
+    , ("margin-left", "auto")
+    , ("margin-right", "auto")
+    , ("width", "60%")
+    ]
+
+inFocusKaderStyle =
+  style
+    [ ("border-bottom" , "1px solid grey")
+    , ("border-left", "2px solid lightblue")
     , ("display", "block-inline")
     , ("margin-left", "auto")
     , ("margin-right", "auto")

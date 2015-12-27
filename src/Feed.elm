@@ -9,6 +9,8 @@ import Html.Events exposing (..)
 import Keyboard exposing (..)
 import Set
 import Char
+import Array
+import Maybe
 
 
 -- MODEL
@@ -24,27 +26,30 @@ type alias Model =
   , currentReminder: String
   , currentDate: String
   , sortFunction: (ID, Item.Model) -> (ID, Item.Model) -> Order
+  -- if -1 no item in focus
+  , focussedItem: ID
   }
 
 type alias ID = Int
 
--- Init stuff
+-- initialize the model
 init : Model
 init =
   let wut =
         initialize
   in
-        Model 0 (List.length wut) wut [] (List.length wut) True True "" "" customComparison
+        updateFocus (Model 0 (List.length wut) wut [] (List.length wut) True True "" "" customComparison 0)
 
+-- Initialize the model with the emails and reminders from the Static.elm file
 initialize: List ( ID, Item.Model)
 initialize =
   List.map2 (,) [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
     (List.append (List.map bulk_init_reminder reminders) (List.map bulk_init_email emails))
 
 bulk_init_reminder record =
-      Item.init False False record.body (get_other_reminder_attributes record)
+      Item.init False False False record.body (get_other_reminder_attributes record)
 bulk_init_email record =
-      Item.init False False record.body (get_other_email_attributes record)
+      Item.init False False False record.body (get_other_email_attributes record)
 
 -- Sort functionality + helpers for the sort functionality
 customComparison: (ID, Item.Model) -> (ID, Item.Model) -> Order
@@ -105,6 +110,39 @@ monthToInt month =
     Nov -> 11
     Dec -> 12
 
+-- This doesn't work bcz of immutability
+getFocussedItem : Model -> Int -> Maybe (ID, Item.Model)
+getFocussedItem model n =
+  if model.showDone then
+    Array.get n (Array.fromList
+    (List.append (List.sortWith model.sortFunction model.todo) (List.sortWith model.sortFunction model.done)))
+  else
+    Array.get n (Array.fromList (List.sortWith model.sortFunction model.todo))
+
+updateFocus : Model -> Model
+updateFocus model =
+  -- Undo the prev focus
+  let
+    modelupdate =
+      { model |
+        done = List.map (\(itemID, item) -> (itemID, Item.update Unfocus item)) model.done,
+        todo = List.map (\(itemID, item) -> (itemID, Item.update Unfocus item)) model.todo
+      }
+    newFocus = getFocussedItem model model.focus
+    focussedId = Maybe.withDefault -1 (Maybe.map fst newFocus)
+    updateItem (itemID, itemModel) =
+          if itemID == focussedId
+              then (itemID, Item.update Focus itemModel)
+              else (itemID, itemModel)
+  in
+    { modelupdate |
+      focussedItem = focussedId,
+      todo = List.map updateItem modelupdate.todo,
+      done = List.map updateItem modelupdate.done
+    }
+
+  -- get the focussed element and set its focus
+  -- replace the element in the appropiate list
 
 -- UPDATE
 
@@ -127,7 +165,9 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp -> {model | sortFunction = customComparison}
+    NoOp -> updateFocus {model |
+      sortFunction = customComparison
+    }
     Remove id ->
       { model |
         todo = List.filter (\(itemID, _) -> itemID /= id) model.todo,
@@ -135,12 +175,12 @@ update action model =
         len = model.len - 1
       }
     Next -> if model.showDone then
-              if model.focus < model.len then
-                {model | focus = model.focus + 1}
+              if model.focus < model.len - 1 then
+                {model | focus = model.focus + 1 }
               else
                 {model | focus = 0}
             else
-              if model.focus < List.length model.todo then
+              if model.focus < (List.length model.todo) - 1 then
                 {model | focus = model.focus + 1}
               else
                 {model | focus = 0}
@@ -148,19 +188,19 @@ update action model =
                   {model | focus = model.focus - 1}
                 else
                   if model.showDone then
-                    {model | focus = model.len}
+                    {model | focus = model.len - 1}
                   else
-                    {model | focus = List.length model.todo}
+                    {model | focus = List.length model.todo - 1}
     Modify id item itemAction ->
       if itemAction == Done then
             if item.done then
                   -- copy back to todo
-                  {model |
+                  updateFocus {model |
                     todo = model.todo ++ [(id, Item.update itemAction item)],
                     done = List.filter (\(itemID, _) -> itemID /= id) model.done
                   }
             else
-                  {model |
+                  updateFocus {model |
                     done = model.done ++ [(id, Item.update itemAction item)],
                     todo = List.filter (\(itemID, _) -> itemID /= id) model.todo
                   }
@@ -170,20 +210,59 @@ update action model =
                   then (itemID, Item.update itemAction itemModel)
                   else (itemID, itemModel)
         in
-            { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
-    AlterSort -> {model | sortFunction = reversedComparison}
-    HideInput -> {model | input = not model.input}
-    HideDone -> {model | showDone = not model.showDone }
-    ReadInput -> {model |
-                    todo = model.todo ++ [(model.todoID + 1,  Item.init False False model.currentReminder
+            updateFocus { model | todo = List.map updateItem model.todo, done = List.map updateItem model.done }
+    AlterSort -> updateFocus {model |
+      sortFunction = reversedComparison
+    }
+    HideInput -> updateFocus {model | input = not model.input}
+    HideDone -> updateFocus {model | showDone = not model.showDone}
+    ReadInput -> updateFocus {model |
+                    todo = model.todo ++ [(model.todoID + 1,  Item.init False False False model.currentReminder
                       [("body", model.currentReminder), ("created", model.currentDate)] )],
                     todoID = model.todoID + 1
                   }
     ReminderBody reminder -> {model | currentReminder = reminder}
     ReminderDate date -> {model | currentDate = date}
-    TruncateFocussed -> model
-    PinFocussed -> model
-    FinishFocussed -> model
+    TruncateFocussed -> let
+                          updateItem (itemID, itemModel) =
+                                if itemID == model.focussedItem
+                                    then (itemID, Item.update Truncate itemModel)
+                                    else (itemID, itemModel)
+                        in
+                          { model |
+                            todo = List.map updateItem model.todo,
+                            done = List.map updateItem model.done
+                          }
+    PinFocussed -> let
+                    updateItem (itemID, itemModel) =
+                      if itemID == model.focussedItem
+                          then (itemID, Item.update Pin itemModel)
+                          else (itemID, itemModel)
+                  in
+                    { model |
+                      todo = List.map updateItem model.todo,
+                      done = List.map updateItem model.done
+                    }
+    FinishFocussed -> let
+                        itemInFocus = Maybe.map snd (getFocussedItem model model.focus)
+                        item = Maybe.withDefault (Item.init False False False model.currentReminder
+                          [("body", model.currentReminder), ("created", model.currentDate)]) itemInFocus
+                        updateItem (itemID, itemModel) =
+                          if itemID == model.focussedItem
+                              then (itemID, Item.update Done itemModel)
+                              else (itemID, itemModel)
+                      in
+                        if item.done then
+                              -- copy back to todo
+                              updateFocus {model |
+                                todo = model.todo ++ [(model.focussedItem, Item.update Done item)],
+                                done = List.filter (\(itemID, _) -> itemID /= model.focussedItem) model.done
+                              }
+                        else
+                              updateFocus {model |
+                                done = model.done ++ [(model.focussedItem, Item.update Done item)],
+                                todo = List.filter (\(itemID, _) -> itemID /= model.focussedItem) model.todo
+                              }
 
 
 -- VIEW
@@ -191,7 +270,8 @@ update action model =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
-    if model.input then
+    div [][text (toString model.focus)]
+    ,if model.input then
       div [footerStyle] [
         input [
           type' "text"

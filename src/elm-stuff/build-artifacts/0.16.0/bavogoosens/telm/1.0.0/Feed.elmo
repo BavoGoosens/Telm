@@ -4,6 +4,7 @@ Elm.Feed.make = function (_elm) {
    _elm.Feed = _elm.Feed || {};
    if (_elm.Feed.values) return _elm.Feed.values;
    var _U = Elm.Native.Utils.make(_elm),
+   $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Char = Elm.Char.make(_elm),
    $Date = Elm.Date.make(_elm),
@@ -62,7 +63,8 @@ Elm.Feed.make = function (_elm) {
    var view = F2(function (address,model) {
       return A2($Html.div,
       _U.list([]),
-      _U.list([model.input ? A2($Html.div,
+      _U.list([A2($Html.div,_U.list([]),_U.list([$Html.text($Basics.toString(model.focus))]))
+              ,model.input ? A2($Html.div,
               _U.list([footerStyle]),
               _U.list([A2($Html.input,
                       _U.list([$Html$Attributes.type$("text")
@@ -104,9 +106,30 @@ Elm.Feed.make = function (_elm) {
       68,
       lijst) ? HideDone : NoOp : NoOp;
    };
+   var getFocussedItem = F2(function (model,n) {
+      return model.showDone ? A2($Array.get,
+      n,
+      $Array.fromList(A2($List.append,A2($List.sortWith,model.sortFunction,model.todo),A2($List.sortWith,model.sortFunction,model.done)))) : A2($Array.get,
+      n,
+      $Array.fromList(A2($List.sortWith,model.sortFunction,model.todo)));
+   });
+   var updateFocus = function (model) {
+      var newFocus = A2(getFocussedItem,model,model.focus);
+      var focussedId = A2($Maybe.withDefault,-1,A2($Maybe.map,$Basics.fst,newFocus));
+      var updateItem = function (_p5) {
+         var _p6 = _p5;
+         var _p8 = _p6._1;
+         var _p7 = _p6._0;
+         return _U.eq(_p7,focussedId) ? {ctor: "_Tuple2",_0: _p7,_1: A2($Item.update,$Item.Focus,_p8)} : {ctor: "_Tuple2",_0: _p7,_1: _p8};
+      };
+      var modelupdate = _U.update(model,
+      {done: A2($List.map,function (_p9) {    var _p10 = _p9;return {ctor: "_Tuple2",_0: _p10._0,_1: A2($Item.update,$Item.Unfocus,_p10._1)};},model.done)
+      ,todo: A2($List.map,function (_p11) {    var _p12 = _p11;return {ctor: "_Tuple2",_0: _p12._0,_1: A2($Item.update,$Item.Unfocus,_p12._1)};},model.todo)});
+      return _U.update(modelupdate,{focussedItem: focussedId,todo: A2($List.map,updateItem,modelupdate.todo),done: A2($List.map,updateItem,modelupdate.done)});
+   };
    var monthToInt = function (month) {
-      var _p5 = month;
-      switch (_p5.ctor)
+      var _p13 = month;
+      switch (_p13.ctor)
       {case "Jan": return 1;
          case "Feb": return 2;
          case "Mar": return 3;
@@ -125,74 +148,106 @@ Elm.Feed.make = function (_elm) {
       $Date.day(b)) ? $Basics.EQ : _U.cmp($Date.day(a),$Date.day(b)) > 0 ? $Basics.GT : $Basics.LT : _U.cmp(monthToInt($Date.month(a)),
       monthToInt($Date.month(b))) > 0 ? $Basics.GT : $Basics.LT : _U.cmp($Date.year(a),$Date.year(b)) > 0 ? $Basics.GT : $Basics.LT;
    });
-   var reversedComparison = F2(function (_p7,_p6) {
-      var _p8 = _p7;
-      var _p11 = _p8._1;
-      var _p9 = _p6;
-      var _p10 = _p9._1;
-      return _U.eq(A2(dateComparison,_p11.order,_p10.order),$Basics.LT) ? $Basics.GT : _U.eq(A2(dateComparison,_p11.order,_p10.order),
+   var reversedComparison = F2(function (_p15,_p14) {
+      var _p16 = _p15;
+      var _p19 = _p16._1;
+      var _p17 = _p14;
+      var _p18 = _p17._1;
+      return _U.eq(A2(dateComparison,_p19.order,_p18.order),$Basics.LT) ? $Basics.GT : _U.eq(A2(dateComparison,_p19.order,_p18.order),
       $Basics.GT) ? $Basics.LT : $Basics.EQ;
    });
-   var customComparison = F2(function (_p13,_p12) {
-      var _p14 = _p13;
-      var _p17 = _p14._1;
-      var _p15 = _p12;
-      var _p16 = _p15._1;
-      return _p17.pinned && $Basics.not(_p16.pinned) ? $Basics.LT : $Basics.not(_p17.pinned) && _p16.pinned ? $Basics.GT : A2(dateComparison,
-      _p17.order,
-      _p16.order);
+   var customComparison = F2(function (_p21,_p20) {
+      var _p22 = _p21;
+      var _p25 = _p22._1;
+      var _p23 = _p20;
+      var _p24 = _p23._1;
+      return _p25.pinned && $Basics.not(_p24.pinned) ? $Basics.LT : $Basics.not(_p25.pinned) && _p24.pinned ? $Basics.GT : A2(dateComparison,
+      _p25.order,
+      _p24.order);
    });
    var update = F2(function (action,model) {
-      var _p18 = action;
-      switch (_p18.ctor)
-      {case "NoOp": return _U.update(model,{sortFunction: customComparison});
-         case "Remove": var _p23 = _p18._0;
+      var _p26 = action;
+      switch (_p26.ctor)
+      {case "NoOp": return updateFocus(_U.update(model,{sortFunction: customComparison}));
+         case "Remove": var _p31 = _p26._0;
            return _U.update(model,
-           {todo: A2($List.filter,function (_p19) {    var _p20 = _p19;return !_U.eq(_p20._0,_p23);},model.todo)
-           ,done: A2($List.filter,function (_p21) {    var _p22 = _p21;return !_U.eq(_p22._0,_p23);},model.done)
+           {todo: A2($List.filter,function (_p27) {    var _p28 = _p27;return !_U.eq(_p28._0,_p31);},model.todo)
+           ,done: A2($List.filter,function (_p29) {    var _p30 = _p29;return !_U.eq(_p30._0,_p31);},model.done)
            ,len: model.len - 1});
-         case "Next": return model.showDone ? _U.cmp(model.focus,model.len) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,
-           {focus: 0}) : _U.cmp(model.focus,$List.length(model.todo)) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
+         case "Next": return model.showDone ? _U.cmp(model.focus,model.len - 1) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,
+           {focus: 0}) : _U.cmp(model.focus,$List.length(model.todo) - 1) < 0 ? _U.update(model,{focus: model.focus + 1}) : _U.update(model,{focus: 0});
          case "Previous": return _U.cmp(model.focus,0) > 0 ? _U.update(model,{focus: model.focus - 1}) : model.showDone ? _U.update(model,
-           {focus: model.len}) : _U.update(model,{focus: $List.length(model.todo)});
-         case "Modify": var _p34 = _p18._2;
-           var _p33 = _p18._1;
-           var _p32 = _p18._0;
-           if (_U.eq(_p34,$Item.Done)) return _p33.done ? _U.update(model,
-              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p32,_1: A2($Item.update,_p34,_p33)}]))
-              ,done: A2($List.filter,function (_p24) {    var _p25 = _p24;return !_U.eq(_p25._0,_p32);},model.done)}) : _U.update(model,
-              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p32,_1: A2($Item.update,_p34,_p33)}]))
-              ,todo: A2($List.filter,function (_p26) {    var _p27 = _p26;return !_U.eq(_p27._0,_p32);},model.todo)}); else {
-                 var updateItem = function (_p28) {
-                    var _p29 = _p28;
-                    var _p31 = _p29._1;
-                    var _p30 = _p29._0;
-                    return _U.eq(_p30,_p32) ? {ctor: "_Tuple2",_0: _p30,_1: A2($Item.update,_p34,_p31)} : {ctor: "_Tuple2",_0: _p30,_1: _p31};
+           {focus: model.len - 1}) : _U.update(model,{focus: $List.length(model.todo) - 1});
+         case "Modify": var _p42 = _p26._2;
+           var _p41 = _p26._1;
+           var _p40 = _p26._0;
+           if (_U.eq(_p42,$Item.Done)) return _p41.done ? updateFocus(_U.update(model,
+              {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: _p40,_1: A2($Item.update,_p42,_p41)}]))
+              ,done: A2($List.filter,function (_p32) {    var _p33 = _p32;return !_U.eq(_p33._0,_p40);},model.done)})) : updateFocus(_U.update(model,
+              {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: _p40,_1: A2($Item.update,_p42,_p41)}]))
+              ,todo: A2($List.filter,function (_p34) {    var _p35 = _p34;return !_U.eq(_p35._0,_p40);},model.todo)})); else {
+                 var updateItem = function (_p36) {
+                    var _p37 = _p36;
+                    var _p39 = _p37._1;
+                    var _p38 = _p37._0;
+                    return _U.eq(_p38,_p40) ? {ctor: "_Tuple2",_0: _p38,_1: A2($Item.update,_p42,_p39)} : {ctor: "_Tuple2",_0: _p38,_1: _p39};
                  };
-                 return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
+                 return updateFocus(_U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)}));
               }
-         case "AlterSort": return _U.update(model,{sortFunction: reversedComparison});
-         case "HideInput": return _U.update(model,{input: $Basics.not(model.input)});
-         case "HideDone": return _U.update(model,{showDone: $Basics.not(model.showDone)});
-         case "ReadInput": return _U.update(model,
+         case "AlterSort": return updateFocus(_U.update(model,{sortFunction: reversedComparison}));
+         case "HideInput": return updateFocus(_U.update(model,{input: $Basics.not(model.input)}));
+         case "HideDone": return updateFocus(_U.update(model,{showDone: $Basics.not(model.showDone)}));
+         case "ReadInput": return updateFocus(_U.update(model,
            {todo: A2($Basics._op["++"],
            model.todo,
            _U.list([{ctor: "_Tuple2"
                     ,_0: model.todoID + 1
-                    ,_1: A4($Item.init,
+                    ,_1: A5($Item.init,
+                    false,
                     false,
                     false,
                     model.currentReminder,
                     _U.list([{ctor: "_Tuple2",_0: "body",_1: model.currentReminder},{ctor: "_Tuple2",_0: "created",_1: model.currentDate}]))}]))
-           ,todoID: model.todoID + 1});
-         case "ReminderBody": return _U.update(model,{currentReminder: _p18._0});
-         case "ReminderDate": return _U.update(model,{currentDate: _p18._0});
-         case "TruncateFocussed": return model;
-         case "PinFocussed": return model;
-         default: return model;}
+           ,todoID: model.todoID + 1}));
+         case "ReminderBody": return _U.update(model,{currentReminder: _p26._0});
+         case "ReminderDate": return _U.update(model,{currentDate: _p26._0});
+         case "TruncateFocussed": var updateItem = function (_p43) {
+              var _p44 = _p43;
+              var _p46 = _p44._1;
+              var _p45 = _p44._0;
+              return _U.eq(_p45,model.focussedItem) ? {ctor: "_Tuple2",_0: _p45,_1: A2($Item.update,$Item.Truncate,_p46)} : {ctor: "_Tuple2",_0: _p45,_1: _p46};
+           };
+           return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
+         case "PinFocussed": var updateItem = function (_p47) {
+              var _p48 = _p47;
+              var _p50 = _p48._1;
+              var _p49 = _p48._0;
+              return _U.eq(_p49,model.focussedItem) ? {ctor: "_Tuple2",_0: _p49,_1: A2($Item.update,$Item.Pin,_p50)} : {ctor: "_Tuple2",_0: _p49,_1: _p50};
+           };
+           return _U.update(model,{todo: A2($List.map,updateItem,model.todo),done: A2($List.map,updateItem,model.done)});
+         default: var updateItem = function (_p51) {
+              var _p52 = _p51;
+              var _p54 = _p52._1;
+              var _p53 = _p52._0;
+              return _U.eq(_p53,model.focussedItem) ? {ctor: "_Tuple2",_0: _p53,_1: A2($Item.update,$Item.Done,_p54)} : {ctor: "_Tuple2",_0: _p53,_1: _p54};
+           };
+           var itemInFocus = A2($Maybe.map,$Basics.snd,A2(getFocussedItem,model,model.focus));
+           var item = A2($Maybe.withDefault,
+           A5($Item.init,
+           false,
+           false,
+           false,
+           model.currentReminder,
+           _U.list([{ctor: "_Tuple2",_0: "body",_1: model.currentReminder},{ctor: "_Tuple2",_0: "created",_1: model.currentDate}])),
+           itemInFocus);
+           return item.done ? updateFocus(_U.update(model,
+           {todo: A2($Basics._op["++"],model.todo,_U.list([{ctor: "_Tuple2",_0: model.focussedItem,_1: A2($Item.update,$Item.Done,item)}]))
+           ,done: A2($List.filter,function (_p55) {    var _p56 = _p55;return !_U.eq(_p56._0,model.focussedItem);},model.done)})) : updateFocus(_U.update(model,
+           {done: A2($Basics._op["++"],model.done,_U.list([{ctor: "_Tuple2",_0: model.focussedItem,_1: A2($Item.update,$Item.Done,item)}]))
+           ,todo: A2($List.filter,function (_p57) {    var _p58 = _p57;return !_U.eq(_p58._0,model.focussedItem);},model.todo)}));}
    });
-   var bulk_init_email = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_email_attributes(record));};
-   var bulk_init_reminder = function (record) {    return A4($Item.init,false,false,record.body,$Static.get_other_reminder_attributes(record));};
+   var bulk_init_email = function (record) {    return A5($Item.init,false,false,false,record.body,$Static.get_other_email_attributes(record));};
+   var bulk_init_reminder = function (record) {    return A5($Item.init,false,false,false,record.body,$Static.get_other_reminder_attributes(record));};
    var initialize = A3($List.map2,
    F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),
    _U.list([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]),
@@ -207,7 +262,19 @@ Elm.Feed.make = function (_elm) {
                         return function (h) {
                            return function (i) {
                               return function (j) {
-                                 return {focus: a,len: b,todo: c,done: d,todoID: e,input: f,showDone: g,currentReminder: h,currentDate: i,sortFunction: j};
+                                 return function (k) {
+                                    return {focus: a
+                                           ,len: b
+                                           ,todo: c
+                                           ,done: d
+                                           ,todoID: e
+                                           ,input: f
+                                           ,showDone: g
+                                           ,currentReminder: h
+                                           ,currentDate: i
+                                           ,sortFunction: j
+                                           ,focussedItem: k};
+                                 };
                               };
                            };
                         };
@@ -220,7 +287,7 @@ Elm.Feed.make = function (_elm) {
    };
    var init = function () {
       var wut = initialize;
-      return Model(0)($List.length(wut))(wut)(_U.list([]))($List.length(wut))(true)(true)("")("")(customComparison);
+      return updateFocus(Model(0)($List.length(wut))(wut)(_U.list([]))($List.length(wut))(true)(true)("")("")(customComparison)(0));
    }();
    var initialModel = init;
    var model = A3($Signal.foldp,update,initialModel,A2($Signal.merge,A2($Signal.map,parseKeyCode,$Keyboard.keysDown),actions.signal));
@@ -234,6 +301,8 @@ Elm.Feed.make = function (_elm) {
                              ,reversedComparison: reversedComparison
                              ,dateComparison: dateComparison
                              ,monthToInt: monthToInt
+                             ,getFocussedItem: getFocussedItem
+                             ,updateFocus: updateFocus
                              ,NoOp: NoOp
                              ,Previous: Previous
                              ,Next: Next
