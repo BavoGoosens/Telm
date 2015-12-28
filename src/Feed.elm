@@ -271,8 +271,7 @@ update action model =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
-    div [][text (toString model.focus)]
-    ,if model.input then
+    if model.input then
       div [footerStyle] [
         input [
           type' "text"
