@@ -11091,7 +11091,8 @@ Elm.Feed.make = function (_elm) {
                     false,
                     model.currentReminder,
                     _U.list([{ctor: "_Tuple2",_0: "body",_1: model.currentReminder},{ctor: "_Tuple2",_0: "created",_1: model.currentDate}]))}]))
-           ,todoID: model.todoID + 1}));
+           ,todoID: model.todoID + 1
+           ,len: model.len + 1}));
          case "ReminderBody": return _U.update(model,{currentReminder: _p26._0});
          case "ReminderDate": return _U.update(model,{currentDate: _p26._0});
          case "TruncateFocussed": var updateItem = function (_p43) {

@@ -220,7 +220,8 @@ update action model =
     ReadInput -> updateFocus {model |
                     todo = model.todo ++ [(model.todoID + 1,  Item.init False False False model.currentReminder
                       [("body", model.currentReminder), ("created", model.currentDate)] )],
-                    todoID = model.todoID + 1
+                    todoID = model.todoID + 1,
+                    len = model.len + 1
                   }
     ReminderBody reminder -> {model | currentReminder = reminder}
     ReminderDate date -> {model | currentDate = date}
